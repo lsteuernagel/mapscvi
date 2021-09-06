@@ -6,15 +6,23 @@
 ### predict_query
 ##########
 
-# Function to run scvi model prediction on query seurat based on provided scvi model.
-# Uses the scArches algorithm as described in the documentation: https://docs.scvi-tools.org/en/stable/api/reference/scvi.model.SCVI.load_query_data.html 
+#' Predict latent space of embedding
+#'
+#' Function to run scvi model prediction on query seurat based on provided scvi model.
+#' Uses the scArches algorithm as described in the documentation: https://docs.scvi-tools.org/en/stable/api/reference/scvi.model.SCVI.load_query_data.html 
+#' 
 #' @param query_seurat_object Seurat object
 #' @param model_path path to pretrained scvi model
 #' @param query_reduction name for reduction
 #' @param max_epochs epochs to train
 #' @param assay assay name for new prediction and where to find raw counts. defaults to RNA
 #' @param global_seed seed
+#' 
 #' @return query_seurat_object: Updated seurat object with predicted latent space as reduction.
+#' 
+#' @export
+#' 
+#' @examples
 
 # TODO: need to limit cores used by scvi ! (run setup !)
 
@@ -100,7 +108,10 @@ predict_query = function(query_seurat_object,model_path,query_reduction="scvi",m
 ### project_query
 ##########
 
-# Function to project query onto reference using a predicted scvi latent space. Returns UMAP, propagated labels and kNN in the updated seurat object.
+#' Project query into reference UMAP
+#' 
+#' Function to project query onto reference using a predicted scvi latent space. Returns UMAP, propagated labels and kNN in the updated seurat object.
+#' 
 #' @param query_seurat_object Seurat object
 #' @param reference_map_reduc reference map dim_reduc (scvi latent space)
 #' @param reference_map_umap reference map UMAP dim_reduc
@@ -109,7 +120,12 @@ predict_query = function(query_seurat_object,model_path,query_reduction="scvi",m
 #' @param annoy.metric 'cosine' or 'euclidean'
 #' @param label_vec a vector with labels from reference that will be propagated to query (requires same order as query_reduction!). defaults to NULL (nothing will be propagated). See also 'propagate_labels'
 #' @param global_seed seed
+#' 
 #' @return query_seurat_object: Updated seurat object with projected UMAP, labels and knn graph
+#' 
+#' @export
+#' 
+#' @examples
 
 project_query = function(query_seurat_object,reference_map_reduc,reference_map_umap,query_reduction="scvi",assay="RNA",k_param_umap = 30,
                          annoy.metric = "cosine",label_vec =NULL,global_seed=12345){
@@ -184,10 +200,18 @@ project_query = function(query_seurat_object,reference_map_reduc,reference_map_u
 ### propagate_labels
 ##########
 
-# Use kNN to propagate labels (any metadata column from reference) to query.
+#' Propagate labels to query
+#' 
+#' Use kNN to propagate labels (any metadata column from reference) to query.
+#'  
 #' @param kNN kNN
 #' @param label_col vector with labels, ids must be consistent with NN indices in kNN
+#' 
 #' @return predicted label for each cell (kNN row)
+#' 
+#' @export
+#' 
+#' @examples
 
 propagate_labels = function(nn_idx,label_vec){
   # check
@@ -208,7 +232,10 @@ propagate_labels = function(nn_idx,label_vec){
 ### map_new_seurat
 ##########
 
-# Helper function to prepare seurat object for format used in mapping
+#' Map a query seurat onto a reference
+#' 
+#' Wrapper functions that executes low level functions to prepare, predict and project new data
+#' 
 #' @param query_seurat_object Seurat object
 #' @param suffix project name to clearly label various steps. defaults to 'query'
 #' @param subset_col
@@ -216,7 +243,12 @@ propagate_labels = function(nn_idx,label_vec){
 #' @param max_epochs
 #' @param model_path
 #' @param global_seed seed
+#' 
 #' @return formatted seurat object
+#' 
+#' @export
+#' 
+#' @examples
 
 map_new_seurat_hypoMap = function(query_seurat_object,suffix="query",subset_col="",label_col="",subset_values=NULL,max_epochs,reference_map_reduc=NULL,reference_map_umap=NULL,reference_map_metadata=NULL,model_path = "/beegfs/scratch/bruening_scratch/lsteuernagel/data/scHarmonize/hypothalamusMapNeurons_v4/harmonization_results/hypothalamus_neurons_reference/hypothalamus_neurons_reference_model/",global_seed=12345){
   

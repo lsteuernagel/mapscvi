@@ -5,11 +5,20 @@
 ### transform_seurat
 ##########
 
-# Helper function to prepare seurat object for format used in mapping
+#' Update gene ids
+#'
+#' Helper function to prepare seurat object gene ids for format used in reference
+#' Currently does nothing and just returns the same object.
+#'
 #' @param query_seurat_object Seurat object
 #' @param suffix project name to clearly label various steps. defaults to 'query'
 #' @param global_seed seed
+#'
 #' @return formatted seurat object
+#'
+#' @export
+#'
+#' @examples
 
 transform_seurat = function(query_seurat_object,suffix="query",global_seed=12345){
 
@@ -32,7 +41,10 @@ transform_seurat = function(query_seurat_object,suffix="query",global_seed=12345
 ### prepare_query
 ##########
 
-# Generic Function to prepare a Seurat object for embedding
+#' Prepare seurat object for mapping functions
+#'
+#' Generic Function to prepare a Seurat object for embedding
+#'
 #' @param query_seurat_object Seurat object
 #' @param suffix project name to clearly label various steps. defaults to 'query'
 #' @param assay which assay from query_seurat_object. defaults to RNA
@@ -40,7 +52,12 @@ transform_seurat = function(query_seurat_object,suffix="query",global_seed=12345
 #' @param subset_values character vector: which values from subset_col should be kept. defaults to NULL which will prevent any subsetting
 #' @param normalize boolean: run standard normalization on assay. defaults to TRUE
 #' @param global_seed seed
+#'
 #' @return updated seurat object
+#'
+#' @export
+#'
+#' @examples
 
 prepare_query = function(query_seurat_object,suffix="query",assay="RNA",subset_col="",subset_values=NULL,normalize=TRUE,global_seed=12345){
 
@@ -76,7 +93,10 @@ prepare_query = function(query_seurat_object,suffix="query",assay="RNA",subset_c
 ### prepare_query_hypoMap
 ##########
 
-# Function to prepare a Seurat object for embedding with releavnt covariates and metadata columns to work with HypoMap
+#' Prepare seurat object for mapping onto hypoMap
+#'
+#' Function to prepare a Seurat object for embedding with releavnt covariates and metadata columns to work with HypoMap
+#'
 #' @param query_seurat_object Seurat object
 #' @param suffix project name to clearly label various steps. defaults to 'query'
 #' @param assay which assay from query_seurat_object. defaults to RNA
@@ -85,7 +105,12 @@ prepare_query = function(query_seurat_object,suffix="query",assay="RNA",subset_c
 #' @param normalize boolean: run standard normalization on assay. defaults to TRUE
 #' @param covariates named vector: names of covariates for hypoMap scvi model that will be added via this function. Changing this parameter or supplying the variables without the proper format can cause probelms! defaults to:
 #' @param global_seed seed
+#'
 #' @return updated seurat object
+#'
+#' @export
+#'
+#' @examples
 
 prepare_query_hypoMap = function(query_seurat_object,suffix="query",assay="RNA",subset_col="",subset_values=NULL,normalize=TRUE,sex_var = "Sex",
                                  covariates=c(batch_var = "Batch_ID",inferred_sex = "inferred_sex.x",rpl_signature_expr_median = "rpl_signature_expr_median"),global_seed=12345){
