@@ -30,6 +30,8 @@ prepare_query_hypoMap(
 
 \item{normalize}{boolean: run standard normalization on assay. defaults to TRUE}
 
+\item{sex_var}{column name with annotation of sample sex}
+
 \item{covariates}{named vector: names of covariates for hypoMap scvi model that will be added via this function. Changing this parameter or supplying the variables without the proper format can cause probelms! defaults to:}
 
 \item{global_seed}{seed}

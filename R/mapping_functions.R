@@ -115,6 +115,7 @@ predict_query = function(query_seurat_object,model_path,query_reduction="scvi",m
 #' @param reference_map_umap reference map UMAP dim_reduc
 #' @param query_reduction key of predicted reduction used for UMAP projection
 #' @param assay assay name. defaults to RNA
+#' @param k_param_umap k neighbors passed to ProjectUMAP
 #' @param annoy.metric 'cosine' or 'euclidean'
 #' @param label_vec a vector with labels from reference that will be propagated to query (requires same order as query_reduction!). defaults to NULL (nothing will be propagated). See also 'propagate_labels'
 #' @param global_seed seed
@@ -204,8 +205,8 @@ project_query = function(query_seurat_object,reference_map_reduc,reference_map_u
 #'
 #' Use kNN to propagate labels (any metadata column from reference) to query.
 #'
-#' @param kNN kNN
-#' @param label_col vector with labels, ids must be consistent with NN indices in kNN
+#' @param nn_idx kNN
+#' @param label_vec vector with labels, ids must be consistent with NN indices in kNN
 #'
 #' @return predicted label for each cell (kNN row)
 #'
@@ -239,6 +240,9 @@ propagate_labels = function(nn_idx,label_vec){
 #' @inheritParams prepare_query
 #' @inheritParams predict_query
 #' @inheritParams project_query
+#' @param reference_map_reduc ref scvi
+#' @param reference_map_umap ref umap
+#' @param reference_map_metadata ref meta dataframe
 #'
 #' @return formatted seurat object
 #'

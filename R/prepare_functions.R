@@ -96,14 +96,9 @@ prepare_query = function(query_seurat_object,suffix="query",assay="RNA",subset_c
 #'
 #' Function to prepare a Seurat object for embedding with releavnt covariates and metadata columns to work with HypoMap
 #'
-#' @param query_seurat_object Seurat object
-#' @param suffix project name to clearly label various steps. defaults to 'query'
-#' @param assay which assay from query_seurat_object. defaults to RNA
-#' @param subset_col character value: metadata column in query_seurat_object that will be used to subset data. defaults to ''
-#' @param subset_values character vector: which values from subset_col should be kept. defaults to NULL which will prevent any subsetting
-#' @param normalize boolean: run standard normalization on assay. defaults to TRUE
+#' @inheritParams prepare_query
 #' @param covariates named vector: names of covariates for hypoMap scvi model that will be added via this function. Changing this parameter or supplying the variables without the proper format can cause probelms! defaults to:
-#' @param global_seed seed
+#' @param sex_var column name with annotation of sample sex
 #'
 #' @return updated seurat object
 #'

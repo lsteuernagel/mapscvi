@@ -27,6 +27,8 @@ project_query(
 
 \item{assay}{assay name. defaults to RNA}
 
+\item{k_param_umap}{k neighbors passed to ProjectUMAP}
+
 \item{annoy.metric}{'cosine' or 'euclidean'}
 
 \item{label_vec}{a vector with labels from reference that will be propagated to query (requires same order as query_reduction!). defaults to NULL (nothing will be propagated). See also 'propagate_labels'}

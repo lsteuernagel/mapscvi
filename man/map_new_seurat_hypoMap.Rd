@@ -30,9 +30,11 @@ map_new_seurat_hypoMap(
 
 \item{max_epochs}{epochs to train}
 
-\item{reference_map_reduc}{reference map dim_reduc (scvi latent space)}
+\item{reference_map_reduc}{ref scvi}
 
-\item{reference_map_umap}{reference map UMAP dim_reduc}
+\item{reference_map_umap}{ref umap}
+
+\item{reference_map_metadata}{ref meta dataframe}
 
 \item{model_path}{path to pretrained scvi model}
 

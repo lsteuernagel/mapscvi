@@ -7,9 +7,9 @@
 propagate_labels(nn_idx, label_vec)
 }
 \arguments{
-\item{kNN}{kNN}
+\item{nn_idx}{kNN}
 
-\item{label_col}{vector with labels, ids must be consistent with NN indices in kNN}
+\item{label_vec}{vector with labels, ids must be consistent with NN indices in kNN}
 }
 \value{
 predicted label for each cell (kNN row)
