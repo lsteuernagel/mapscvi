@@ -18,8 +18,7 @@
 #'
 #' @export
 #'
-#' @import Seurat
-#' @import SeuratObject
+#' @import SeuratObject Seurat
 #'
 #' @examples
 
@@ -60,10 +59,7 @@ transform_seurat = function(query_seurat_object,suffix="query",global_seed=12345
 #'
 #' @export
 #'
-#' @import Seurat
-#' @import SeuratObject
-#' @import rlang
-#' @import dplyr
+#' @import Seurat SeuratObject rlang dplyr
 #'
 #' @examples
 
@@ -113,10 +109,7 @@ prepare_query = function(query_seurat_object,suffix="query",assay="RNA",subset_c
 #'
 #' @export
 #'
-#' @import Seurat
-#' @import SeuratObject
-#' @import rlang
-#' @import dplyr
+#' @import Seurat SeuratObject rlang dplyr
 #'
 #' @examples
 

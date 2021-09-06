@@ -24,13 +24,17 @@ map_new_seurat_hypoMap(
 
 \item{suffix}{project name to clearly label various steps. defaults to 'query'}
 
-\item{subset_col}{column to subset by}
+\item{subset_col}{character value: metadata column in query_seurat_object that will be used to subset data. defaults to ''}
 
-\item{subset_values}{values of subset_col to filter on}
+\item{subset_values}{character vector: which values from subset_col should be kept. defaults to NULL which will prevent any subsetting}
 
-\item{max_epochs}{epochs to train during scvi query function}
+\item{max_epochs}{epochs to train}
 
-\item{model_path}{path to scvi model on disk}
+\item{reference_map_reduc}{reference map dim_reduc (scvi latent space)}
+
+\item{reference_map_umap}{reference map UMAP dim_reduc}
+
+\item{model_path}{path to pretrained scvi model}
 
 \item{global_seed}{seed}
 }
