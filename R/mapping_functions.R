@@ -22,15 +22,14 @@
 #' 
 #' @export
 #' 
+#' @import Seurat
+#' @import SeuratObject
+#' 
 #' @examples
 
 # TODO: need to limit cores used by scvi ! (run setup !)
 
 predict_query = function(query_seurat_object,model_path,query_reduction="scvi",max_epochs = 30,assay="RNA",global_seed=12345){
-  
-  require(Seurat)
-  require(SeuratObject)
-  require(reticulate)
   
   # load the variable feature from modelpath
   var_features = utils::read.table(paste0(model_path,"var_names.csv"),header = F)$V1
@@ -124,6 +123,9 @@ predict_query = function(query_seurat_object,model_path,query_reduction="scvi",m
 #' @return query_seurat_object: Updated seurat object with projected UMAP, labels and knn graph
 #' 
 #' @export
+#' 
+#' @import Seurat
+#' @import SeuratObject
 #' 
 #' @examples
 
@@ -238,10 +240,10 @@ propagate_labels = function(nn_idx,label_vec){
 #' 
 #' @param query_seurat_object Seurat object
 #' @param suffix project name to clearly label various steps. defaults to 'query'
-#' @param subset_col
-#' @param subset_values
-#' @param max_epochs
-#' @param model_path
+#' @param subset_col column to subset by
+#' @param subset_values values of subset_col to filter on
+#' @param max_epochs epochs to train during scvi query function
+#' @param model_path path to scvi model on disk
 #' @param global_seed seed
 #' 
 #' @return formatted seurat object

@@ -18,6 +18,9 @@
 #'
 #' @export
 #'
+#' @import Seurat
+#' @import SeuratObject
+#'
 #' @examples
 
 transform_seurat = function(query_seurat_object,suffix="query",global_seed=12345){
@@ -57,14 +60,14 @@ transform_seurat = function(query_seurat_object,suffix="query",global_seed=12345
 #'
 #' @export
 #'
+#' @import Seurat
+#' @import SeuratObject
+#' @import rlang
+#' @import dplyr
+#'
 #' @examples
 
 prepare_query = function(query_seurat_object,suffix="query",assay="RNA",subset_col="",subset_values=NULL,normalize=TRUE,global_seed=12345){
-
-  require(Seurat)
-  require(SeuratObject)
-  require(rlang)
-  #require(dplyr)
 
   # subset if wanted
   if(subset_col %in% colnames(query_seurat_object@meta.data) & !is.null(subset_values)){
@@ -110,16 +113,15 @@ prepare_query = function(query_seurat_object,suffix="query",assay="RNA",subset_c
 #'
 #' @export
 #'
+#' @import Seurat
+#' @import SeuratObject
+#' @import rlang
+#' @import dplyr
+#'
 #' @examples
 
 prepare_query_hypoMap = function(query_seurat_object,suffix="query",assay="RNA",subset_col="",subset_values=NULL,normalize=TRUE,sex_var = "Sex",
                                  covariates=c(batch_var = "Batch_ID",inferred_sex = "inferred_sex.x",rpl_signature_expr_median = "rpl_signature_expr_median"),global_seed=12345){
-
-  require(Seurat)
-  require(SeuratObject)
-  require(rlang)
-  require(dplyr)
-
   # subset if wanted
   if(subset_col %in% colnames(query_seurat_object@meta.data) & !is.null(subset_values)){
     bef = ncol(query_seurat_object)
