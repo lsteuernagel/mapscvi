@@ -240,6 +240,7 @@ propagate_labels = function(nn_idx,label_vec){
 #' @inheritParams prepare_query
 #' @inheritParams predict_query
 #' @inheritParams project_query
+#' @param label_col the column name in reference_map_metadata with labels to propagate
 #' @param reference_map_reduc ref scvi
 #' @param reference_map_umap ref umap
 #' @param reference_map_metadata ref meta dataframe
