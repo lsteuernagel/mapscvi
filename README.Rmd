@@ -28,29 +28,62 @@ Install mapscvi using:
 devtools::install_github("lsteuernagel/mapscvi")
 ```
 
+In order to use the package python and scvi >= 0.8, as well as R and Seurat > 4.0.0 are required.
+
+A docker image which comes with a compatible R, Seurat v4, pytorch and scvi installation can be found here: https://hub.docker.com/r/lsteuernagel/r_scvi 
+
 ## Example
 
-TODO: Change to actual code snippets
+This package allows to embed new single-cell data stored in Seurat objects into HypoMap.
 
-This is a basic example which shows you how to solve a common problem:
+The functions used to do this can also be used to embed data into other models.
+
+An example workflow that emebds the romanov et al. smart-seq dataset into the HypoMap:
 
 ```{r example}
 library(mapscvi)
-## basic example code
+
+#You'll still need to render `README.Rmd` regularly, to keep `README.md` up-to-date. `devtools::build_readme()` is handy for this. You could also use GitHub Actions to re-render `README.Rmd` every time you push. An example workflow can be found here: <https://github.com/r-lib/actions/tree/master/examples>.
 ```
 
-What is special about using `README.Rmd` instead of just `README.md`? You can include R chunks like so:
+We load the example data which contains a Seurat object.
 
 ```{r cars}
-summary(cars)
+load("/beegfs/scratch/bruening_scratch/lsteuernagel/data/tmp_mapscvi/query_test_object.RData")
+query_seurat_object
 ```
 
-You'll still need to render `README.Rmd` regularly, to keep `README.md` up-to-date. `devtools::build_readme()` is handy for this. You could also use GitHub Actions to re-render `README.Rmd` every time you push. An example workflow can be found here: <https://github.com/r-lib/actions/tree/master/examples>.
+The test data does not contain any dimensional reductions for visualization or annotation.
 
-You can also embed plots, for example:
-
-```{r pressure, echo = FALSE}
-plot(pressure)
+```{r}
+names(query_seurat_object@reductions)
 ```
 
-In that case, don't forget to commit and push the resulting figure files, so they display on GitHub and CRAN.
+TODO: There seems to be a critical bug in the package: The tesdata does not produce the expected result!
+
+This wrapper function executes all required mapping steps. We provide the query object as well as a column from HypoMap which we want to predict.
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+query_seurat_object = map_new_seurat_hypoMap(query_seurat_object,suffix="query_romanov",label_col="K169_named",max_epochs=20)
+names(query_seurat_object@reductions)
+```
+
+
+```{r}
+table(query_seurat_object@meta.data$predicted)
+```
+
+```{r}
+Seurat::DimPlot(query_seurat_object,group.by = "predicted")+Seurat::NoLegend()
+```
+
+
+
+## Preparing a Seurat object
+
+TODO: Showcase helper function and provide a guide on how to get to a Seurat object with the right format.
+
+
+## Detailed walkthrough
+
+TODO: Explain all individual setup

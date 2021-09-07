@@ -17,41 +17,103 @@ Install mapscvi using:
 devtools::install_github("lsteuernagel/mapscvi")
 ```
 
+In order to use the package python and scvi &gt;= 0.8, as well as R and
+Seurat &gt; 4.0.0 are required.
+
+A docker image which comes with a compatible R, Seurat v4, pytorch and
+scvi installation can be found here:
+<https://hub.docker.com/r/lsteuernagel/r_scvi>
+
 ## Example
 
-TODO: Change to actual code snippets
+This package allows to embed new single-cell data stored in Seurat
+objects into HypoMap.
 
-This is a basic example which shows you how to solve a common problem:
+The functions used to do this can also be used to embed data into other
+models.
+
+An example workflow that emebds the romanov et al. smart-seq dataset
+into the HypoMap:
 
 ``` r
 library(mapscvi)
-#> Loading required package: Matrix
-## basic example code
+#> Registered S3 method overwritten by 'cli':
+#>   method     from    
+#>   print.boxx spatstat
+#> Registered S3 method overwritten by 'SeuratDisk':
+#>   method            from  
+#>   as.sparse.H5Group Seurat
+
+#You'll still need to render `README.Rmd` regularly, to keep `README.md` up-to-date. `devtools::build_readme()` is handy for this. You could also use GitHub Actions to re-render `README.Rmd` every time you push. An example workflow can be found here: <https://github.com/r-lib/actions/tree/master/examples>.
 ```
 
-What is special about using `README.Rmd` instead of just `README.md`?
-You can include R chunks like so:
+We load the example data which contains a Seurat object.
 
 ``` r
-summary(cars)
-#>      speed           dist       
-#>  Min.   : 4.0   Min.   :  2.00  
-#>  1st Qu.:12.0   1st Qu.: 26.00  
-#>  Median :15.0   Median : 36.00  
-#>  Mean   :15.4   Mean   : 42.98  
-#>  3rd Qu.:19.0   3rd Qu.: 56.00  
-#>  Max.   :25.0   Max.   :120.00
+load("/beegfs/scratch/bruening_scratch/lsteuernagel/data/tmp_mapscvi/query_test_object.RData")
+query_seurat_object
+#> An object of class Seurat 
+#> 21143 features across 845 samples within 1 assay 
+#> Active assay: RNA (21143 features, 1500 variable features)
 ```
 
-You’ll still need to render `README.Rmd` regularly, to keep `README.md`
-up-to-date. `devtools::build_readme()` is handy for this. You could also
-use GitHub Actions to re-render `README.Rmd` every time you push. An
-example workflow can be found here:
-<https://github.com/r-lib/actions/tree/master/examples>.
+The test data does not contain any dimensional reductions for
+visualization or annotation.
 
-You can also embed plots, for example:
+``` r
+names(query_seurat_object@reductions)
+#> NULL
+```
 
-<img src="man/figures/README-pressure-1.png" width="100%" />
+TODO: There seems to be a critical bug in the package: The tesdata does
+not produce the expected result!
 
-In that case, don’t forget to commit and push the resulting figure
-files, so they display on GitHub and CRAN.
+This wrapper function executes all required mapping steps. We provide
+the query object as well as a column from HypoMap which we want to
+predict.
+
+``` r
+table(query_seurat_object@meta.data$predicted)
+#> 
+#>                               Gnrh1                           Oxt.Smim3 
+#>                                   9                                   1 
+#>             Slc17a6.Fezf1.Cd40.Esr1       Slc17a6.Fezf1.Cd40.Gldn.Smim3 
+#>                                   1                                   1 
+#>   Slc17a6.Fezf1.Ifi27l2a.Foxp2.Lmo3 Slc17a6.Fezf1.Ifi27l2a.Foxp2.Prdm13 
+#>                                   6                                   7 
+#>     Slc17a6.Foxb1.Pitx2.Ctxn3.Postn      Slc17a6.Foxb1.Pitx2.Sepp1.Mobp 
+#>                                   1                                  78 
+#>   Slc17a6.Foxb1.Pitx2.Sepp1.Slc7a10             Slc17a6.Nrn1.Tbr1.Shox2 
+#>                                 688                                   9 
+#>  Slc17a6.Ppp1r1b.Crym.Adora2a.Meis2      Slc17a6.Ppp1r1b.Crym.Tac1.Drd1 
+#>                                   1                                   4 
+#>     Slc17a6.Ppp1r1b.Crym.Tac1.Prok2               Slc17a6.Ppp1r1b.Meis2 
+#>                                  15                                   7 
+#>               Slc32a1.Arx.Lhx6.Ngfr                Slc32a1.Arx.Lhx6.Npy 
+#>                                   2                                   4 
+#>          Slc32a1.Arx.St18.Nfix.Lhx8              Slc32a1.Hmx2.Gsx1.Ghrh 
+#>                                   2                                   1 
+#>              Slc32a1.Hmx2.Lef1.Prph         Slc32a1.Otp.Npy.Agrp.Gm8773 
+#>                                   1                                   1 
+#>                Slc32a1.Otp.Npy.Sox6          Slc32a1.Satb2.Fam159b.Nfix 
+#>                                   1                                   1 
+#>                    Slc32a1.Six6.Vip                   Slc32a1.Tbx3.Tac2 
+#>                                   1                                   1 
+#>      Slc32a1.Tbx3.Tcf7l2.Pomc.Anxa2        Slc32a1.Tbx3.Tcf7l2.Pomc.Ttr 
+#>                                   1                                   1
+```
+
+``` r
+Seurat::DimPlot(query_seurat_object,group.by = "predicted")+Seurat::NoLegend()
+```
+
+<img src="man/figures/README-unnamed-chunk-5-1.png" width="100%" />
+
+## Preparing a Seurat object
+
+TODO: Showcase helper function and provide a guide on how to get to a
+Seurat object with the right format.
+
+## Detailed walkthrough
+
+TODO: Explain all individual setup

@@ -72,7 +72,7 @@ prepare_query = function(query_seurat_object,suffix="query",assay="RNA",subset_c
     message("Subsetting query object to ",ncol(query_seurat_object)," cells from ",bef," cells" )
   }
   #normalize
-  if(dim(neuron_map_seurat@assays$RNA@data)[2] != dim(neuron_map_seurat@assays$RNA@counts)[2]){normalize=TRUE}
+  if(dim(query_seurat_object@assays$RNA@data)[2] != dim(query_seurat_object@assays$RNA@counts)[2]){normalize=TRUE}
   if(normalize){
     message("Normalizing data")
     query_seurat_object <- Seurat::NormalizeData(object = query_seurat_object,assay = assay, verbose = F,normalization.method = "LogNormalize",scale.factor = 10000)
@@ -117,7 +117,7 @@ prepare_query_hypoMap = function(query_seurat_object,suffix="query",assay="RNA",
     message("Subsetting query object to ",ncol(query_seurat_object)," cells from ",bef," cells" )
   }
   #normalize
-  if(dim(neuron_map_seurat@assays$RNA@data)[2] != dim(neuron_map_seurat@assays$RNA@counts)[2]){normalize=TRUE}
+  if(dim(query_seurat_object@assays$RNA@data)[2] != dim(query_seurat_object@assays$RNA@counts)[2]){normalize=TRUE}
   if(normalize){
     message("Normalizing data")
     query_seurat_object <- Seurat::NormalizeData(object = query_seurat_object,assay = assay, verbose = F,normalization.method = "LogNormalize",scale.factor = 10000)
