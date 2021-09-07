@@ -30,7 +30,7 @@
 
 # TODO: need to limit cores used by scvi ! (run setup !)
 
-predict_query = function(query_seurat_object,model_path,query_reduction="scvi",max_epochs = 30,assay="RNA",use_reticulate = FALSE,temp_dir = "??",global_seed=12345){
+predict_query = function(query_seurat_object,model_path,query_reduction="scvi",max_epochs = 30,assay="RNA",use_reticulate = FALSE,temp_dir = "/beegfs/scratch/bruening_scratch/lsteuernagel/data/tmp_mapscvi/",global_seed=12345){
 
   # load the variable feature from modelpath
   var_features = utils::read.table(paste0(model_path,"var_names.csv"),header = F)$V1
@@ -88,12 +88,25 @@ predict_query = function(query_seurat_object,model_path,query_reduction="scvi",m
     rownames(scvi_prediction) = colnames(matrix_for_anndata)
 
   }else{ # this version does not use reticulate to execute scvi
-    # save anndata in file
+
+    # make path if not existing
+    system(paste0("mkdir -p ",temp_dir))
+
+    # make Seurat from updated matrix
+    temp_seurat = SeuratObject::CreateSeuratObject(counts = matrix_for_anndata, meta.data = query_seurat_object@meta.data, project = query_seurat_object@project.name)
+    # export anndata
+    h5Seurat_filename=paste0(temp_dir,"temp_",temp_seurat@project.name,".h5Seurat")
+    SeuratDisk::SaveH5Seurat(object = temp_seurat,filename = h5Seurat_filename,overwrite = TRUE)
+    updated_name = gsub(".h5Seurat",paste0("_",assay,".h5ad"),h5Seurat_filename)
+    SeuratDisk::Convert(h5Seurat_filename, dest = updated_name,assay=assay,verbose=FALSE,overwrite=TRUE)
 
     # call python script
-    #system(...)
+    output_file = paste0(temp_dir,"predicted_",temp_seurat@project.name,".txt")
+    system(paste0("python3 -u python/map_scvi.py ",updated_name," ",model_path," ",output_file," ",max_epochs))
 
     # load results into R
+    scvi_prediction = read.table(output_file)
+
    # scvi_prediction = ...
   }
 
