@@ -16,6 +16,8 @@
 #' @param query_reduction name for reduction
 #' @param max_epochs epochs to train
 #' @param assay assay name for new prediction and where to find raw counts. defaults to RNA
+#' @param use_reticulate if TRUE: tries to call scvi via reticulate, if FALSE: exports an anndata object to a temp file and then calls a python script to run prediction code using system()
+#' @param temp_dir directory for temporary files if use_reticulate == FALSE
 #' @param global_seed seed
 #'
 #' @return query_seurat_object: Updated seurat object with predicted latent space as reduction.
@@ -28,16 +30,10 @@
 
 # TODO: need to limit cores used by scvi ! (run setup !)
 
-predict_query = function(query_seurat_object,model_path,query_reduction="scvi",max_epochs = 30,assay="RNA",global_seed=12345){
+predict_query = function(query_seurat_object,model_path,query_reduction="scvi",max_epochs = 30,assay="RNA",use_reticulate = FALSE,temp_dir = "??",global_seed=12345){
 
   # load the variable feature from modelpath
   var_features = utils::read.table(paste0(model_path,"var_names.csv"),header = F)$V1
-
-  # I am following this guide: https://docs.scvi-tools.org/en/stable/user_guide/notebooks/scvi_in_R.html
-  pd <- import('pandas', convert = FALSE)
-  sc <- import('scanpy', convert = FALSE)
-  scvi <- import('scvi', convert = FALSE)
-  #scvi$settings$progress_bar_style = 'tqdm'
 
   # export to anndata
   var_df = data.frame(var_names = rownames(SeuratObject::GetAssayData(query_seurat_object,slot='counts',assay=assay)))
@@ -55,38 +51,51 @@ predict_query = function(query_seurat_object,model_path,query_reduction="scvi",m
   var_df = data.frame(var_names = rownames(matrix_for_anndata))
   rownames(var_df) = var_df$var_names
 
-  # make anndata in python
-  adata_query <- sc$AnnData(
-    X   = t(matrix_for_anndata), #scVI requires raw counts, scanpy transposed data
-    obs = query_seurat_object@meta.data,
-    var = var_df
-  )
-  # put raw data in X slot!
-  # adata_query$X = adata_query$raw$X$copy()
-  # load_query_data
-  vae_q = scvi$model$SCVI$load_query_data(
-    adata = adata_query,
-    reference_model = model_path, # get model directly from disk!
-    inplace_subset_query_vars=TRUE
-  )
-  # train
-  message(max_epochs)
-  vae_q$train(max_epochs=as.integer(max_epochs),
-              plan_kwargs=list(weight_decay=0.0)
-  ) # use same epochs and weight_decay = 0
-  # results
+  ### reticulate code section:
+  if(use_reticulate){
+    # I am following this guide: https://docs.scvi-tools.org/en/stable/user_guide/notebooks/scvi_in_R.html
+    pd <- import('pandas', convert = FALSE)
+    sc <- import('scanpy', convert = FALSE)
+    scvi <- import('scvi', convert = FALSE)
+    #scvi$settings$progress_bar_style = 'tqdm'
 
-  #adata_query$obsm["X_scVI"] = vae_q$get_latent_representation() # get laten dim
-  # get results directly into R dataframe
-  scvi_prediction = vae_q$get_latent_representation()
-  scvi_prediction = as.matrix(scvi_prediction)
-  colnames(scvi_prediction) = paste0("scVI_",1:ncol(scvi_prediction))
-  rownames(scvi_prediction) = colnames(matrix_for_anndata)
-  # make dataframe with results (python version, need to fix some reticulate stuff):
-  # output = pd$DataFrame(adata_query$obsm["X_scVI"])
-  # output = output$set_index(adata_query$obs_names)
-  # scvi_prediction = output$set_axis(("scVI_" + str(s) for s in output$axes[1]$to_list()), axis=1, inplace=False)
-  # scvi_prediction = as.data.frame(scvi_prediction) # just to make sure we are back in R
+    # make anndata in python
+    adata_query <- sc$AnnData(
+      X   = t(matrix_for_anndata), #scVI requires raw counts, scanpy transposed data
+      obs = query_seurat_object@meta.data,
+      var = var_df
+    )
+    # put raw data in X slot!
+    # adata_query$X = adata_query$raw$X$copy()
+    # load_query_data
+    vae_q = scvi$model$SCVI$load_query_data(
+      adata = adata_query,
+      reference_model = model_path, # get model directly from disk!
+      inplace_subset_query_vars=TRUE
+    )
+    # train
+    message(max_epochs)
+    vae_q$train(max_epochs=as.integer(max_epochs),
+                plan_kwargs=list(weight_decay=0.0)
+    ) # use same epochs and weight_decay = 0
+    # results
+
+    #adata_query$obsm["X_scVI"] = vae_q$get_latent_representation() # get laten dim
+    # get results directly into R dataframe
+    scvi_prediction = vae_q$get_latent_representation()
+    scvi_prediction = as.matrix(scvi_prediction)
+    colnames(scvi_prediction) = paste0("scVI_",1:ncol(scvi_prediction))
+    rownames(scvi_prediction) = colnames(matrix_for_anndata)
+
+  }else{ # this version does not use reticulate to execute scvi
+    # save anndata in file
+
+    # call python script
+    #system(...)
+
+    # load results into R
+   # scvi_prediction = ...
+  }
 
   # make query dim red
   query_dimred <- Seurat::CreateDimReducObject(
@@ -241,8 +250,6 @@ propagate_labels = function(nn_idx,label_vec){
 #' @inheritParams predict_query
 #' @inheritParams project_query
 #' @param label_col the column name in reference_map_metadata with labels to propagate
-#' @param reference_map_reduc ref scvi
-#' @param reference_map_umap ref umap
 #' @param reference_map_metadata ref meta dataframe
 #'
 #' @return formatted seurat object

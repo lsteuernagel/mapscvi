@@ -26,13 +26,15 @@ map_new_seurat_hypoMap(
 
 \item{subset_col}{character value: metadata column in query_seurat_object that will be used to subset data. defaults to ''}
 
+\item{label_col}{the column name in reference_map_metadata with labels to propagate}
+
 \item{subset_values}{character vector: which values from subset_col should be kept. defaults to NULL which will prevent any subsetting}
 
 \item{max_epochs}{epochs to train}
 
-\item{reference_map_reduc}{ref scvi}
+\item{reference_map_reduc}{reference map dim_reduc (scvi latent space)}
 
-\item{reference_map_umap}{ref umap}
+\item{reference_map_umap}{reference map UMAP dim_reduc}
 
 \item{reference_map_metadata}{ref meta dataframe}
 
