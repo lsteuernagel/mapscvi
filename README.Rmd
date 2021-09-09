@@ -59,10 +59,17 @@ The test data does not contain any dimensional reductions for visualization or a
 names(query_seurat_object@reductions)
 ```
 
+To map data to the reference HypoMap, we load a reduced Seurat object with relevant information.
+
+```{r}
+load("/beegfs/scratch/bruening_scratch/lsteuernagel/data/tmp_mapscvi/reference_hypoMap.RData")
+```
+
+
 This wrapper function executes all required mapping steps. We provide the query object as well as a column from HypoMap which we want to predict.
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
-query_seurat_object = map_new_seurat_hypoMap(query_seurat_object,suffix="query_romanov",label_col="K169_named",max_epochs=20)
+query_seurat_object = map_new_seurat_hypoMap(query_seurat_object,suffix="query_romanov",label_col="K169_named",max_epochs=20,reference_seurat=reference_hypoMap)
 names(query_seurat_object@reductions)
 ```
 

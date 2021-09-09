@@ -266,8 +266,8 @@ propagate_labels = function(nn_idx,label_vec){
 #' @inheritParams predict_query
 #' @inheritParams project_query
 #' @param label_col the column name in reference_map_metadata with labels to propagate
-#' @param reference_map_metadata ref meta dataframe
-#' @param dim_red_file RData with hypoMap dimred
+#' @param reference_seurat reference seurat
+#' @param reference_reduction name of scvi reduction in reference. Also expect a umap named as 'umap_'reference_reduction
 #'
 #' @return formatted seurat object
 #'
@@ -277,22 +277,25 @@ propagate_labels = function(nn_idx,label_vec){
 #'
 #' @examples
 
-map_new_seurat_hypoMap = function(query_seurat_object,suffix="query",subset_col="",label_col="",subset_values=NULL,max_epochs,reference_map_reduc=NULL,
-                                  reference_map_umap=NULL,reference_map_metadata=NULL,model_path = "/beegfs/scratch/bruening_scratch/lsteuernagel/data/scHarmonize/hypothalamusMapNeurons_v4/harmonization_results/hypothalamus_neurons_reference/hypothalamus_neurons_reference_model/",
-                                  use_reticulate = FALSE,temp_dir = "/beegfs/scratch/bruening_scratch/lsteuernagel/data/tmp_mapscvi/", dim_red_file = "/beegfs/scratch/bruening_scratch/lsteuernagel/data/tmp_mapscvi/hypoMap_dimred.RData",global_seed=12345){
+map_new_seurat_hypoMap = function(query_seurat_object,suffix="query",assay="RNA",subset_col="",label_col="",subset_values=NULL,max_epochs,reference_seurat=NULL,reference_reduction="scvi",model_path = "/beegfs/scratch/bruening_scratch/lsteuernagel/data/scHarmonize/hypothalamusMapNeurons_v4/harmonization_results/hypothalamus_neurons_reference/hypothalamus_neurons_reference_model/",
+                                  use_reticulate = FALSE,temp_dir = "/beegfs/scratch/bruening_scratch/lsteuernagel/data/tmp_mapscvi/",global_seed=12345){
 
   # prepare
-  query_seurat_object = prepare_query_hypoMap(query_seurat_object,suffix="query",assay="RNA",subset_col=subset_col,subset_values=subset_values,normalize=TRUE,
+  query_seurat_object = prepare_query_hypoMap(query_seurat_object,suffix=suffix,assay=assay,subset_col=subset_col,subset_values=subset_values,normalize=TRUE,
                                               covariates=c(batch_var = "Batch_ID",inferred_sex = "inferred_sex.x",rpl_signature_expr_median = "rpl_signature_expr_median"),global_seed=global_seed)
   # predict with scvi
   query_seurat_object = predict_query(query_seurat_object,model_path,max_epochs = max_epochs,assay="RNA",global_seed=global_seed)
 
-  # load reference map data
-  if(is.null(reference_map_reduc) | is.null(reference_map_umap)){
-    message("Loading reference information from ",dim_red_file)
-    load(dim_red_file)
+  # check
+  if(is.null(reference_seurat)){
+    stop("Please provide reference seurat with latent space, umap and metadata")
   }
+  if(! (reference_reduction %in% names(reference_seurat@reductions) & paste0("umap_",reference_reduction) %in% names(reference_seurat@reductions))){
+    stop("Cannot find '",reference_reduction,"' or 'umap_",reference_reduction,"'  in provided reference_seurat.")
+  }
+
   # make label_vec
+  reference_map_metadata = reference_seurat@meta.data
   label_vec=NULL
   if(!is.null(reference_map_metadata)){
     if(label_col %in% colnames(reference_map_metadata)){
@@ -304,7 +307,7 @@ map_new_seurat_hypoMap = function(query_seurat_object,suffix="query",subset_col=
     message("No metadata provided. Cannot propagate labels!")
   }
   # project onto reference
-  query_seurat_object = project_query(query_seurat_object,reference_map_reduc,reference_map_umap,k_param_umap = 30,label_vec =label_vec,global_seed=global_seed)
+  query_seurat_object = project_query(query_seurat_object,reference_seurat@reductions[[reference_reduction]],reference_seurat@reductions[[paste0("umap_",reference_reduction)]],k_param_umap = 30,label_vec =label_vec,global_seed=global_seed)
 
   # return
   return(query_seurat_object)

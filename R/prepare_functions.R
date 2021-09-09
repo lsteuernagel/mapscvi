@@ -110,12 +110,18 @@ prepare_query = function(query_seurat_object,suffix="query",assay="RNA",subset_c
 
 prepare_query_hypoMap = function(query_seurat_object,suffix="query",assay="RNA",subset_col="",subset_values=NULL,normalize=TRUE,sex_var = "Sex",
                                  covariates=c(batch_var = "Batch_ID",inferred_sex = "inferred_sex.x",rpl_signature_expr_median = "rpl_signature_expr_median"),global_seed=12345){
+  # check that counts exists:
+  if(dim(query_seurat_object@assays$RNA@counts)[1]==0){stop("Matrix in @counts slot seems non-existent. Please provide a valid matrix with raw counts per cell in the @counts slot.")}
+  # check that counts does not contain float values
+  if(sum(query_seurat_object@assays$RNA@counts[,1])%%1!=0){stop("Found float values in @counts slot. Please provide a valid matrix with raw counts per cell in the @counts slot.")}
+
   # subset if wanted
   if(subset_col %in% colnames(query_seurat_object@meta.data) & !is.null(subset_values)){
     bef = ncol(query_seurat_object)
     query_seurat_object = subset(query_seurat_object,subset = !!rlang::sym(subset_col) %in% subset_values)
     message("Subsetting query object to ",ncol(query_seurat_object)," cells from ",bef," cells" )
   }
+
   #normalize
   if(dim(query_seurat_object@assays$RNA@data)[2] != dim(query_seurat_object@assays$RNA@counts)[2]){normalize=TRUE}
   if(normalize){

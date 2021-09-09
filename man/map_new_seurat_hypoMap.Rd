@@ -7,19 +7,17 @@
 map_new_seurat_hypoMap(
   query_seurat_object,
   suffix = "query",
+  assay = "RNA",
   subset_col = "",
   label_col = "",
   subset_values = NULL,
   max_epochs,
-  reference_map_reduc = NULL,
-  reference_map_umap = NULL,
-  reference_map_metadata = NULL,
+  reference_seurat = NULL,
+  reference_reduction = "scvi",
  
     model_path = "/beegfs/scratch/bruening_scratch/lsteuernagel/data/scHarmonize/hypothalamusMapNeurons_v4/harmonization_results/hypothalamus_neurons_reference/hypothalamus_neurons_reference_model/",
   use_reticulate = FALSE,
   temp_dir = "/beegfs/scratch/bruening_scratch/lsteuernagel/data/tmp_mapscvi/",
- 
-    dim_red_file = "/beegfs/scratch/bruening_scratch/lsteuernagel/data/tmp_mapscvi/hypoMap_dimred.RData",
   global_seed = 12345
 )
 }
@@ -27,6 +25,8 @@ map_new_seurat_hypoMap(
 \item{query_seurat_object}{Seurat object}
 
 \item{suffix}{project name to clearly label various steps. defaults to 'query'}
+
+\item{assay}{which assay from query_seurat_object. defaults to RNA}
 
 \item{subset_col}{character value: metadata column in query_seurat_object that will be used to subset data. defaults to ''}
 
@@ -36,19 +36,15 @@ map_new_seurat_hypoMap(
 
 \item{max_epochs}{epochs to train}
 
-\item{reference_map_reduc}{reference map dim_reduc (scvi latent space)}
+\item{reference_seurat}{reference seurat}
 
-\item{reference_map_umap}{reference map UMAP dim_reduc}
-
-\item{reference_map_metadata}{ref meta dataframe}
+\item{reference_reduction}{name of scvi reduction in reference. Also expect a umap named as 'umap_'reference_reduction}
 
 \item{model_path}{path to pretrained scvi model}
 
 \item{use_reticulate}{if TRUE: tries to call scvi via reticulate, if FALSE: exports an anndata object to a temp file and then calls a python script to run prediction code using system()}
 
 \item{temp_dir}{directory for temporary files if use_reticulate == FALSE}
-
-\item{dim_red_file}{RData with hypoMap dimred}
 
 \item{global_seed}{seed}
 }

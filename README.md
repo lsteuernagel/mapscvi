@@ -65,6 +65,13 @@ names(query_seurat_object@reductions)
 #> NULL
 ```
 
+To map data to the reference HypoMap, we load a reduced Seurat object
+with relevant information.
+
+``` r
+load("/beegfs/scratch/bruening_scratch/lsteuernagel/data/tmp_mapscvi/reference_hypoMap.RData")
+```
+
 This wrapper function executes all required mapping steps. We provide
 the query object as well as a column from HypoMap which we want to
 predict.
@@ -98,7 +105,7 @@ head(sort(table(query_seurat_object@meta.data$predicted),decreasing = TRUE),n = 
 Seurat::DimPlot(query_seurat_object,group.by = "predicted")+Seurat::NoLegend()
 ```
 
-<img src="man/figures/README-unnamed-chunk-5-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-6-1.png" width="100%" />
 
 ## Preparing a Seurat object
 

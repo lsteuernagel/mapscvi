@@ -41,3 +41,12 @@
 #
 #
 #
+
+# reference_hypoMap = CreateSeuratObject(neuron_map_seurat@assays$RNA@counts,project = "HypoMap_reference",meta.data = neuron_map_seurat@meta.data)
+# reference_hypoMap@reductions = neuron_map_seurat@reductions
+# dummy=matrix(data = as.numeric())
+# reference_hypoMap@assays$RNA@counts <- dummy[,-1] # error is okay
+# reference_hypoMap@assays$RNA@data <- dummy[,-1] # error is okay
+# reference_hypoMap@assays$RNA@scale.data <- dummy[,-1] # error is okay
+# reference_hypoMap@assays$RNA@meta.features <- as.data.frame(dummy[,-1])
+# save(reference_hypoMap,file = "/beegfs/scratch/bruening_scratch/lsteuernagel/data/tmp_mapscvi/reference_hypoMap.RData")
