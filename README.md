@@ -65,42 +65,33 @@ names(query_seurat_object@reductions)
 #> NULL
 ```
 
-TODO: There seems to be a critical bug in the package: The tesdata does
-not produce the expected result!
-
 This wrapper function executes all required mapping steps. We provide
 the query object as well as a column from HypoMap which we want to
 predict.
 
 ``` r
-table(query_seurat_object@meta.data$predicted)
+head(sort(table(query_seurat_object@meta.data$predicted),decreasing = TRUE),n = 20)
 #> 
-#>                               Gnrh1                           Oxt.Smim3 
-#>                                   9                                   1 
-#>             Slc17a6.Fezf1.Cd40.Esr1       Slc17a6.Fezf1.Cd40.Gldn.Smim3 
-#>                                   1                                   1 
-#>   Slc17a6.Fezf1.Ifi27l2a.Foxp2.Lmo3 Slc17a6.Fezf1.Ifi27l2a.Foxp2.Prdm13 
-#>                                   6                                   7 
-#>     Slc17a6.Foxb1.Pitx2.Ctxn3.Postn      Slc17a6.Foxb1.Pitx2.Sepp1.Mobp 
-#>                                   1                                  78 
-#>   Slc17a6.Foxb1.Pitx2.Sepp1.Slc7a10             Slc17a6.Nrn1.Tbr1.Shox2 
-#>                                 688                                   9 
-#>  Slc17a6.Ppp1r1b.Crym.Adora2a.Meis2      Slc17a6.Ppp1r1b.Crym.Tac1.Drd1 
-#>                                   1                                   4 
-#>     Slc17a6.Ppp1r1b.Crym.Tac1.Prok2               Slc17a6.Ppp1r1b.Meis2 
-#>                                  15                                   7 
-#>               Slc32a1.Arx.Lhx6.Ngfr                Slc32a1.Arx.Lhx6.Npy 
-#>                                   2                                   4 
-#>          Slc32a1.Arx.St18.Nfix.Lhx8              Slc32a1.Hmx2.Gsx1.Ghrh 
-#>                                   2                                   1 
-#>              Slc32a1.Hmx2.Lef1.Prph         Slc32a1.Otp.Npy.Agrp.Gm8773 
-#>                                   1                                   1 
-#>                Slc32a1.Otp.Npy.Sox6          Slc32a1.Satb2.Fam159b.Nfix 
-#>                                   1                                   1 
-#>                    Slc32a1.Six6.Vip                   Slc32a1.Tbx3.Tac2 
-#>                                   1                                   1 
-#>      Slc32a1.Tbx3.Tcf7l2.Pomc.Anxa2        Slc32a1.Tbx3.Tcf7l2.Pomc.Ttr 
-#>                                   1                                   1
+#>           Slc17a6.Nrn1.Tbr1.Shox2    Slc17a6.Foxb1.Pitx2.Sepp1.Mobp 
+#>                               141                                61 
+#>             Slc17a6.Nrn1.Sim1.Trh Slc17a6.Foxb1.Pitx2.Sepp1.Slc7a10 
+#>                                53                                49 
+#>                         Oxt.Smim3        Slc32a1.Hmx2.Hmx3.Prok2.Th 
+#>                                45                                25 
+#>        Slc17a6.Nrn1.Sim1.Ebf3.Crh       Slc32a1.Arx.Gad2.Sp9.Fbxw13 
+#>                                23                                22 
+#>                  Slc17a6.Nrn1.Sst             Slc32a1.Arx.Gad2.Sncg 
+#>                                20                                18 
+#>                          Oxt.Ebf3        Slc17a6.Nrn1.Sim1.Ebf1.Otp 
+#>                                15                                14 
+#>          Slc32a1.Arx.St18.Tmem215             Slc32a1.Hmx2.Hmx3.Nts 
+#>                                14                                14 
+#>      Slc32a1.Hmx2.Hmx3.Pmaip1.Gal   Slc17a6.Fezf1.Cd40.Nr5a1.Gpr149 
+#>                                14                                13 
+#>    Slc32a1.Arx.Gad2.Meis2.Slc30a3    Slc32a1.Tbx3.Tcf7l2.Pomc.Anxa2 
+#>                                11                                11 
+#>   Slc32a1.Arx.Gad2.Onecut2.Adarb2       Slc32a1.Hmx2.Hmx3.Prok2.Nts 
+#>                                10                                10
 ```
 
 ``` r

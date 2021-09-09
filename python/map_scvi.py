@@ -26,6 +26,10 @@ adata_query = sc.read_h5ad(query_path)
 str_df = adata_query.obs
 str_df = str_df.applymap(lambda x: x.decode() if isinstance(x, bytes) else x)
 adata_query.obs = str_df
+# same with var slot:
+string_index = pd.Series([i.decode('UTF-8') if isinstance(i, bytes) else i for i in adata_query.var.index.to_list()])
+adata_query.var = adata_query.var.assign(features=string_index.values)
+adata_query.var = adata_query.var.set_index(keys=string_index)
 
 #print("online update")
 model_path = str(model_path)
@@ -35,7 +39,7 @@ print("using model stored at: "+model_path)
 vae_q = scvi.model.SCVI.load_query_data(
     adata_query,
     model_path, # get model directly from disk!
-    inplace_subset_query_vars=False
+    inplace_subset_query_vars=True
 )
 # train --> how many epochs ?
 print("Training with disabled error bar.")

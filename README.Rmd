@@ -59,8 +59,6 @@ The test data does not contain any dimensional reductions for visualization or a
 names(query_seurat_object@reductions)
 ```
 
-TODO: There seems to be a critical bug in the package: The tesdata does not produce the expected result!
-
 This wrapper function executes all required mapping steps. We provide the query object as well as a column from HypoMap which we want to predict.
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
@@ -70,7 +68,7 @@ names(query_seurat_object@reductions)
 
 
 ```{r}
-table(query_seurat_object@meta.data$predicted)
+head(sort(table(query_seurat_object@meta.data$predicted),decreasing = TRUE),n = 20)
 ```
 
 ```{r}
