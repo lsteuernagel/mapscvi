@@ -140,7 +140,7 @@ predict_query = function(query_seurat_object,model_path,query_reduction="scvi",m
 #' @param reference_map_umap reference map UMAP dim_reduc
 #' @param query_reduction key of predicted reduction used for UMAP projection
 #' @param assay assay name. defaults to RNA
-#' @param k_param_umap k neighbors passed to ProjectUMAP
+#' @param n_neighbors n neighbors passed to ProjectUMAP
 #' @param annoy.metric 'cosine' or 'euclidean'
 #' @param label_vec a vector with labels from reference that will be propagated to query (requires same order as query_reduction!). defaults to NULL (nothing will be propagated). See also 'propagate_labels'
 #' @param global_seed seed
@@ -153,7 +153,7 @@ predict_query = function(query_seurat_object,model_path,query_reduction="scvi",m
 #'
 #' @examples
 
-project_query = function(query_seurat_object,reference_map_reduc,reference_map_umap,query_reduction="scvi",assay="RNA",k_param_umap = 30,
+project_query = function(query_seurat_object,reference_map_reduc,reference_map_umap,query_reduction="scvi",assay="RNA",n_neighbors = NULL,
                          annoy.metric = "cosine",label_vec =NULL,global_seed=12345){
 
   # TODO: test for umap model (?)
@@ -172,13 +172,15 @@ project_query = function(query_seurat_object,reference_map_reduc,reference_map_u
   ### project query onto umap
   message(Sys.time(),": Project UMAP.." )
 
+  if(is.null(n_neighbors)){n_neighbors=reference_map_umap@misc$model$n_neighbors}
+
   query_projection = Seurat::ProjectUMAP(
     query = query_seurat_object@reductions[[query_reduction]],
     query.dims = 1:ncol(query_seurat_object@reductions[[query_reduction]]@cell.embeddings),
     reference = reference_map_reduc,
     reference.dims = 1:ncol(reference_map_reduc@cell.embeddings),
-    k.param = k_param_umap,
-    n.neighbors = k_param_umap,
+    k.param = reference_map_umap@misc$model$n_neighbors,
+    n.neighbors = n_neighbors,
     nn.method = "annoy",
     n.trees = 50,
     annoy.metric = annoy.metric,
@@ -207,15 +209,16 @@ project_query = function(query_seurat_object,reference_map_reduc,reference_map_u
   query_seurat_object@neighbors[["query_ref_nn"]]=query_projection$query.neighbor
 
   # propagate labels
-  if(!is.null(label_vec))
+  if(!is.null(label_vec)){
     message(Sys.time(),": Predict labels..." )
-  labels <- tryCatch({
-    propagate_labels(nn_idx=query_seurat_object@neighbors[["query_ref_nn"]]@nn.idx,label_vec=label_vec)
-  },
-  error=function(cond) {
-    message("Cannot propagate labels. Returning NA. Error:",cond)
-    return(NA)
-  })
+    labels <- tryCatch({
+      propagate_labels(nn_idx=query_seurat_object@neighbors[["query_ref_nn"]]@nn.idx,label_vec=label_vec)
+    },
+    error=function(cond) {
+      message("Cannot propagate labels. Returning NA. Error:",cond)
+      return(NA)
+    })
+  }
   # add to seurat
   query_seurat_object@meta.data[,paste0("predicted")] = labels
   #return
@@ -307,21 +310,11 @@ map_new_seurat_hypoMap = function(query_seurat_object,suffix="query",assay="RNA"
     message("No metadata provided. Cannot propagate labels!")
   }
   # project onto reference
-  query_seurat_object = project_query(query_seurat_object,reference_seurat@reductions[[reference_reduction]],reference_seurat@reductions[[paste0("umap_",reference_reduction)]],k_param_umap = 30,label_vec =label_vec,global_seed=global_seed)
+  query_seurat_object = project_query(query_seurat_object,reference_seurat@reductions[[reference_reduction]],
+                                      reference_seurat@reductions[[paste0("umap_",reference_reduction)]],
+                                      label_vec =label_vec,
+                                      global_seed=global_seed)
 
   # return
   return(query_seurat_object)
 }
-
-### Test code:
-# global_seed = 123467# seed
-# map_name = "hypothalamus_neurons_reference"
-# map_path = "/beegfs/scratch/bruening_scratch/lsteuernagel/data/scHarmonize/hypothalamusMapNeurons_v4/harmonization_results/hypothalamus_neurons_reference/"
-# map_seurat_path = paste0(map_path,map_name,".h5Seurat")
-# neuron_map_seurat = SeuratDisk::LoadH5Seurat(map_seurat_path)
-# reference_map_reduc = neuron_map_seurat@reductions$scvi
-# reference_map_umap = neuron_map_seurat@reductions$umap_scvi
-# label_vec  = neuron_map_seurat@meta.data$K169_named
-#
-# query_seurat_object_path = "/beegfs/scratch/bruening_scratch/lsteuernagel/data/scHarmonize/hypothalamusMapFull_v4/harmonization_results/mapped_data_yeo_full/mapped_data_yeo_full.h5Seurat" # seurat object to load
-# query_seurat_object = SeuratDisk::LoadH5Seurat(query_seurat_object_path)

@@ -10,7 +10,7 @@ project_query(
   reference_map_umap,
   query_reduction = "scvi",
   assay = "RNA",
-  k_param_umap = 30,
+  n_neighbors = NULL,
   annoy.metric = "cosine",
   label_vec = NULL,
   global_seed = 12345
@@ -27,7 +27,7 @@ project_query(
 
 \item{assay}{assay name. defaults to RNA}
 
-\item{k_param_umap}{k neighbors passed to ProjectUMAP}
+\item{n_neighbors}{n neighbors passed to ProjectUMAP}
 
 \item{annoy.metric}{'cosine' or 'euclidean'}
 

@@ -9,16 +9,7 @@
 # subset_values = "Neurons"
 # query_seurat_object = SeuratDisk::LoadH5Seurat(query_seurat_object_path)
 #
-# ## load romanov query
-# suffix ="mapped_data_yeo_romanov" # a name
-# query_seurat_object_path = "/beegfs/scratch/bruening_scratch/lsteuernagel/data/scHarmonize/hypothalamusMapNeurons_v4/harmonization_results/hypothalamus_neurons_reference/mapped_data_Romanov_neurons/mapped_data_Romanov_neurons.h5Seurat" # seurat object to load
-# query_seurat_object = SeuratDisk::LoadH5Seurat(query_seurat_object_path)
-# query_seurat_object@reductions = list()
-# query_seurat_object@meta.data = query_seurat_object@meta.data[,1:20]
-#
-# #save testdata
-# save(query_seurat_object,
-#      file = "/beegfs/scratch/bruening_scratch/lsteuernagel/data/tmp_mapscvi/query_test_object.RData")
+
 #
 # # set model
 # map_name = "hypothalamus_neurons_reference" # reference map
@@ -60,10 +51,21 @@
 #
 
 
-####
+#### TEST DATA
+
+# ## load romanov query
+# suffix ="mapped_data_yeo_romanov" # a name
+# query_romanov_path = "/beegfs/scratch/bruening_scratch/lsteuernagel/data/scHarmonize/hypothalamusMapNeurons_v4/harmonization_results/hypothalamus_neurons_reference/mapped_data_Romanov_neurons/mapped_data_Romanov_neurons.h5Seurat" # seurat object to load
+# query_romanov = SeuratDisk::LoadH5Seurat(query_romanov_path)
+# query_romanov@reductions = list()
+# query_romanov@meta.data = query_romanov@meta.data[,1:20]
+#
+# #save testdata
+# save(query_romanov,
+#      file = "/beegfs/scratch/bruening_scratch/lsteuernagel/data/tmp_mapscvi/query_romanov_object.RData")
+
 #
 # require(scRNAseq)
-# sce <- LaMannoBrainData(which = "mouse-adult",ensembl=FALSE)
-# object = sce
-# object = SingleCellExperiment::counts(object)
+# sce_lamanno_da <- LaMannoBrainData(which = "mouse-adult",ensembl=FALSE)
+# save(sce_lamanno_da,file = "/beegfs/scratch/bruening_scratch/lsteuernagel/data/tmp_mapscvi/sce_lamanno_da.RData")
 

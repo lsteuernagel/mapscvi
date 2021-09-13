@@ -91,3 +91,8 @@ plot_query_labels = function(query_seura_object,reference_seurat,label_col,label
 
   p_full
 }
+
+
+##########
+### plot propagation statistics
+##########

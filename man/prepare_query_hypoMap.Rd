@@ -6,6 +6,7 @@
 \usage{
 prepare_query_hypoMap(
   object,
+  suffix = "query",
   covariates = c(batch_var = "Batch_ID", inferred_sex = "inferred_sex.x",
     rpl_signature_expr_median = "rpl_signature_expr_median"),
   sex_var = "Sex",
@@ -14,6 +15,8 @@ prepare_query_hypoMap(
 }
 \arguments{
 \item{object}{input object: a Seurat, SingleCellExperiment or matrix-like object containing the raw (non-normalized) counts.}
+
+\item{suffix}{query project name. defaults to 'query'}
 
 \item{covariates}{named vector: names of covariates for hypoMap scvi model that will be added via this function. Changing this parameter or supplying the variables without the proper format can cause problems! defaults to: c(batch_var = "Batch_ID",inferred_sex = "inferred_sex.x",rpl_signature_expr_median = "rpl_signature_expr_median")}
 

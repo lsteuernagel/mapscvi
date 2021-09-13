@@ -20,6 +20,8 @@ prepare_query(
 
 \item{suffix}{query project name. defaults to 'query'}
 
+\item{metadata}{optional metadata data.frame to overwrite default metadata with. rownames must correspond to colnames of object}
+
 \item{assay}{which assay from query_seurat_object. defaults to RNA}
 
 \item{subset_col}{character value: metadata column in query_seurat_object that will be used to subset data. defaults to ''}
@@ -29,8 +31,6 @@ prepare_query(
 \item{normalize}{boolean: run standard normalization on assay. defaults to TRUE}
 
 \item{global_seed}{seed}
-
-\item{metadata:}{optional metadata data.frame to overwrite default metadata with. rownames must correspond to colnames of object}
 }
 \value{
 updated seurat object

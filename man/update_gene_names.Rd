@@ -22,8 +22,6 @@ update_gene_names(
 \item{query_species}{species}
 
 \item{reference_species}{species}
-
-\item{global_seed}{seed}
 }
 \value{
 formatted seurat object

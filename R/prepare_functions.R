@@ -37,7 +37,7 @@ prepare_query = function(object,suffix="query",metadata =NULL,assay="RNA",subset
     }
   } else if(length(intersect(base::class(object),c("SingleCellExperiment")))>0){
     count_data= as(SingleCellExperiment::counts(object), "dgCMatrix")
-    temp_metadata <- SummarizedExperiment::colData(object)
+    temp_metadata <- as.data.frame(SummarizedExperiment::colData(object))
     if(!is.null(metadata)){
       if(length(setdiff(rownames(metadata),colnames(count_data))) == 0){
         message("Overwriting SingleCellExperiment colData with provided metadata")
@@ -59,6 +59,7 @@ prepare_query = function(object,suffix="query",metadata =NULL,assay="RNA",subset
   }else{
     stop("Error: Cannot convert provided object to Seurat. Please provide a Seurat object, a SingleCellExperiment or matrix-like object with cells as columns.")
   }
+
   # check that counts exists:
   if(dim(query_seurat_object@assays[[assay]]@counts)[1]==0){stop("Matrix in @counts slot seems non-existent. Please provide a valid matrix with raw counts per cell in the @counts slot.")}
   # check that counts does not contain float values
@@ -76,6 +77,9 @@ prepare_query = function(object,suffix="query",metadata =NULL,assay="RNA",subset
     message("Normalizing data")
     query_seurat_object <- Seurat::NormalizeData(object = query_seurat_object,assay = assay, verbose = F,normalization.method = "LogNormalize",scale.factor = 10000)
   }
+
+  # add cell id column
+  query_seurat_object@meta.data$Cell_ID = rownames(query_seurat_object@meta.data)
 
   ## clean up
   query_seurat_object@project.name = suffix
@@ -109,13 +113,14 @@ prepare_query = function(object,suffix="query",metadata =NULL,assay="RNA",subset
 #'
 #' @examples
 
-prepare_query_hypoMap = function(object,covariates=c(batch_var = "Batch_ID",inferred_sex = "inferred_sex.x",rpl_signature_expr_median = "rpl_signature_expr_median"),sex_var = "Sex",...){
+prepare_query_hypoMap = function(object,suffix="query",covariates=c(batch_var = "Batch_ID",inferred_sex = "inferred_sex.x",rpl_signature_expr_median = "rpl_signature_expr_median"),sex_var = "Sex",...){
 
   # run prepare query
   query_seurat_object = prepare_query(object=object,...)
 
   # check gene ids
   #if(rownames(query_seurat_object))
+
 
   # add missing variables for hypomap
   batch_var = covariates["batch_var"]
