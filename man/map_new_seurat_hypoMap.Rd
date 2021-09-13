@@ -24,7 +24,7 @@ map_new_seurat_hypoMap(
 \arguments{
 \item{query_seurat_object}{Seurat object}
 
-\item{suffix}{project name to clearly label various steps. defaults to 'query'}
+\item{suffix}{query project name. defaults to 'query'}
 
 \item{assay}{which assay from query_seurat_object. defaults to RNA}
 

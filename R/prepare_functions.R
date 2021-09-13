@@ -1,28 +1,68 @@
 
-# This file contains functions to prepare a query seurat for mapping with mapscvi.
 
 ##########
-### convert_to_seurat
+### update_gene_names
 ##########
 
-#' Convert various objects to seurat object.
+#' Update gene ids
 #'
-#' Helper function to prepare seurat object from matrix, SingleCellObject or ...
+#' Helper function to prepare seurat object gene ids for format used in reference
+#' Currently does nothing and just returns the same object.
 #'
-#' @param object object that will be converted to seurat. For matrix: expects columns as cells.
-#' @param suffix query project name. defaults to 'query'
-#' @param metadata: optional metadata data.frame. rownames must correspond to colnames of object
+#' @param query_seurat_object Seurat object
+#' @param suffix project name to clearly label various steps. defaults to 'query'
 #' @param global_seed seed
 #'
 #' @return formatted seurat object
 #'
 #' @export
 #'
-#' @import SeuratObject Seurat SingleCellExperiment SummarizedExperiment
+#' @import SeuratObject Seurat
 #'
 #' @examples
 
-convert_to_seurat = function(object,suffix="query",metadata=NULL,global_seed=12345){
+update_gene_names = function(query_seurat_object,suffix="query",global_seed=12345){
+
+
+  #TODO: procedures to map to gene names used in reference query
+
+  # from human ens ids
+
+  # from human gene names
+
+  # from mouse ens ids
+
+  return(query_seurat_object)
+
+}
+
+
+##########
+### prepare_query
+##########
+
+#' Prepare seurat object for mapping functions
+#'
+#' Generic Function to prepare a Seurat object for embedding
+#'
+#' @param object input object: a Seurat, SingleCellExperiment or matrix-like object containing the raw (non-normalized) counts.
+#' @param suffix query project name. defaults to 'query'
+#' @param metadata: optional metadata data.frame to overwrite default metadata with. rownames must correspond to colnames of object
+#' @param assay which assay from query_seurat_object. defaults to RNA
+#' @param subset_col character value: metadata column in query_seurat_object that will be used to subset data. defaults to ''
+#' @param subset_values character vector: which values from subset_col should be kept. defaults to NULL which will prevent any subsetting
+#' @param normalize boolean: run standard normalization on assay. defaults to TRUE
+#' @param global_seed seed
+#'
+#' @return updated seurat object
+#'
+#' @export
+#'
+#' @import Seurat SeuratObject rlang dplyr
+#'
+#' @examples
+
+prepare_query = function(object,suffix="query",metadata =NULL,assay="RNA",subset_col="",subset_values=NULL,normalize=TRUE,global_seed=12345){
 
   # Convert object to seurat
   if(length(intersect(base::class(object),c("Seurat","SeuratObject")))>0){
@@ -30,7 +70,7 @@ convert_to_seurat = function(object,suffix="query",metadata=NULL,global_seed=123
     if(!is.null(metadata)){
       if(base::all(rownames(metadata) == colnames(query_seurat_object))){
         message("Overwriting Seurat metadata with provided metadata")
-        temp_metadata = metadata
+        query_seurat_object@meta.data = metadata
       }
     }
   } else if(length(intersect(base::class(object),c("SingleCellExperiment")))>0){
@@ -57,83 +97,19 @@ convert_to_seurat = function(object,suffix="query",metadata=NULL,global_seed=123
   }else{
     stop("Error: Cannot convert provided object to Seurat. Please provide a Seurat object, a SingleCellExperiment or matrix-like object with cells as columns.")
   }
+  # check that counts exists:
+  if(dim(query_seurat_object@assays[[assay]]@counts)[1]==0){stop("Matrix in @counts slot seems non-existent. Please provide a valid matrix with raw counts per cell in the @counts slot.")}
+  # check that counts does not contain float values
+  if(sum(query_seurat_object@assays[[assay]]@counts[,1])%%1!=0){stop("Found float values in @counts slot. Please provide a valid matrix with raw counts per cell in the @counts slot.")}
 
-  return(query_seurat_object)
-
-}
-
-##########
-### update_gene_names
-##########
-
-#' Update gene ids
-#'
-#' Helper function to prepare seurat object gene ids for format used in reference
-#' Currently does nothing and just returns the same object.
-#'
-#' @param query_seurat_object Seurat object
-#' @param suffix project name to clearly label various steps. defaults to 'query'
-#' @param global_seed seed
-#'
-#' @return formatted seurat object
-#'
-#' @export
-#'
-#' @import SeuratObject Seurat
-#'
-#' @examples
-
-update_gene_names = function(query_seurat_object,suffix="query",global_seed=12345){
-
-  #TODO: check that Cell_ID exists and combine with suffix
-
-  #TODO: procedures to map to gene names used in reference query
-
-  # from human ens ids
-
-  # from human gene names
-
-  # from mouse ens ids
-
-  return(query_seurat_object)
-
-}
-
-
-##########
-### prepare_query
-##########
-
-#' Prepare seurat object for mapping functions
-#'
-#' Generic Function to prepare a Seurat object for embedding
-#'
-#' @param query_seurat_object Seurat object
-#' @param suffix query project name. defaults to 'query'
-#' @param assay which assay from query_seurat_object. defaults to RNA
-#' @param subset_col character value: metadata column in query_seurat_object that will be used to subset data. defaults to ''
-#' @param subset_values character vector: which values from subset_col should be kept. defaults to NULL which will prevent any subsetting
-#' @param normalize boolean: run standard normalization on assay. defaults to TRUE
-#' @param global_seed seed
-#'
-#' @return updated seurat object
-#'
-#' @export
-#'
-#' @import Seurat SeuratObject rlang dplyr
-#'
-#' @examples
-
-prepare_query = function(query_seurat_object,suffix="query",assay="RNA",subset_col="",subset_values=NULL,normalize=TRUE,global_seed=12345){
-
-  # subset if wanted
+  # subset with certain values of a metadata column if wanted
   if(subset_col %in% colnames(query_seurat_object@meta.data) & !is.null(subset_values)){
     bef = ncol(query_seurat_object)
     query_seurat_object = subset(query_seurat_object,subset = !!rlang::sym(subset_col) %in% subset_values)
     message("Subsetting query object to ",ncol(query_seurat_object)," cells from ",bef," cells" )
   }
   #normalize
-  if(dim(query_seurat_object@assays$RNA@data)[2] != dim(query_seurat_object@assays$RNA@counts)[2]){normalize=TRUE}
+  if(dim(query_seurat_object@assays[[assay]]@data)[2] != dim(query_seurat_object@assays[[assay]]@counts)[2]){normalize=TRUE}
   if(normalize){
     message("Normalizing data")
     query_seurat_object <- Seurat::NormalizeData(object = query_seurat_object,assay = assay, verbose = F,normalization.method = "LogNormalize",scale.factor = 10000)
@@ -141,10 +117,10 @@ prepare_query = function(query_seurat_object,suffix="query",assay="RNA",subset_c
 
   ## clean up
   query_seurat_object@project.name = suffix
-  query_seurat_object@reductions = list()
+  #query_seurat_object@reductions = list()
   #query_seurat_object@misc = list()
   dummy=matrix(data = as.numeric())
-  query_seurat_object@assays[["RNA"]]@scale.data <- dummy[,-1] # error is okay
+  query_seurat_object@assays[[assay]]@scale.data <- dummy[,-1] # error is okay
 
   return(query_seurat_object)
 }
@@ -155,11 +131,13 @@ prepare_query = function(query_seurat_object,suffix="query",assay="RNA",subset_c
 
 #' Prepare seurat object for mapping onto hypoMap
 #'
-#' Function to prepare a Seurat object for embedding with releavnt covariates and metadata columns to work with HypoMap
+#' Function to prepare an object for embedding with relevant covariates and metadata columns to work with HypoMap.
+#' This will call prepare_query and additionally check the covariates and add them with a custom procedure (most likely does not work for other scvi models and reference objects)
 #'
 #' @inheritParams prepare_query
-#' @param covariates named vector: names of covariates for hypoMap scvi model that will be added via this function. Changing this parameter or supplying the variables without the proper format can cause probelms! defaults to:
+#' @param covariates named vector: names of covariates for hypoMap scvi model that will be added via this function. Changing this parameter or supplying the variables without the proper format can cause problems! defaults to: c(batch_var = "Batch_ID",inferred_sex = "inferred_sex.x",rpl_signature_expr_median = "rpl_signature_expr_median")
 #' @param sex_var column name with annotation of sample sex
+#' @param ... additional arguments to prepare_query
 #'
 #' @return updated seurat object
 #'
@@ -169,26 +147,9 @@ prepare_query = function(query_seurat_object,suffix="query",assay="RNA",subset_c
 #'
 #' @examples
 
-prepare_query_hypoMap = function(query_seurat_object,suffix="query",assay="RNA",subset_col="",subset_values=NULL,normalize=TRUE,sex_var = "Sex",
-                                 covariates=c(batch_var = "Batch_ID",inferred_sex = "inferred_sex.x",rpl_signature_expr_median = "rpl_signature_expr_median"),global_seed=12345){
-  # check that counts exists:
-  if(dim(query_seurat_object@assays$RNA@counts)[1]==0){stop("Matrix in @counts slot seems non-existent. Please provide a valid matrix with raw counts per cell in the @counts slot.")}
-  # check that counts does not contain float values
-  if(sum(query_seurat_object@assays$RNA@counts[,1])%%1!=0){stop("Found float values in @counts slot. Please provide a valid matrix with raw counts per cell in the @counts slot.")}
+prepare_query_hypoMap = function(object,covariates=c(batch_var = "Batch_ID",inferred_sex = "inferred_sex.x",rpl_signature_expr_median = "rpl_signature_expr_median"),sex_var = "Sex",...){
 
-  # subset if wanted
-  if(subset_col %in% colnames(query_seurat_object@meta.data) & !is.null(subset_values)){
-    bef = ncol(query_seurat_object)
-    query_seurat_object = subset(query_seurat_object,subset = !!rlang::sym(subset_col) %in% subset_values)
-    message("Subsetting query object to ",ncol(query_seurat_object)," cells from ",bef," cells" )
-  }
-
-  #normalize
-  if(dim(query_seurat_object@assays$RNA@data)[2] != dim(query_seurat_object@assays$RNA@counts)[2]){normalize=TRUE}
-  if(normalize){
-    message("Normalizing data")
-    query_seurat_object <- Seurat::NormalizeData(object = query_seurat_object,assay = assay, verbose = F,normalization.method = "LogNormalize",scale.factor = 10000)
-  }
+  query_seurat_object = prepare_query(object=object,...)
 
   # add missing variables for hypomap
   batch_var = covariates["batch_var"]
@@ -257,14 +218,7 @@ prepare_query_hypoMap = function(query_seurat_object,suffix="query",assay="RNA",
     query_seurat_object@meta.data$rpl_signature_expr_median = apply(rpl_signature_expr,1,median,na.rm=TRUE)
   }
 
-
-  ## clean up
-  query_seurat_object@project.name = suffix
-  query_seurat_object@reductions = list()
-  #query_seurat_object@misc = list()
-  dummy=matrix(data = as.numeric())
-  query_seurat_object@assays[["RNA"]]@scale.data <- dummy[,-1] # error is okay
-
+  # return
   return(query_seurat_object)
 }
 

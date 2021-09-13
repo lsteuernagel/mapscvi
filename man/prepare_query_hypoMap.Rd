@@ -5,40 +5,26 @@
 \title{Prepare seurat object for mapping onto hypoMap}
 \usage{
 prepare_query_hypoMap(
-  query_seurat_object,
-  suffix = "query",
-  assay = "RNA",
-  subset_col = "",
-  subset_values = NULL,
-  normalize = TRUE,
-  sex_var = "Sex",
+  object,
   covariates = c(batch_var = "Batch_ID", inferred_sex = "inferred_sex.x",
     rpl_signature_expr_median = "rpl_signature_expr_median"),
-  global_seed = 12345
+  sex_var = "Sex",
+  ...
 )
 }
 \arguments{
-\item{query_seurat_object}{Seurat object}
+\item{object}{input object: a Seurat, SingleCellExperiment or matrix-like object containing the raw (non-normalized) counts.}
 
-\item{suffix}{project name to clearly label various steps. defaults to 'query'}
-
-\item{assay}{which assay from query_seurat_object. defaults to RNA}
-
-\item{subset_col}{character value: metadata column in query_seurat_object that will be used to subset data. defaults to ''}
-
-\item{subset_values}{character vector: which values from subset_col should be kept. defaults to NULL which will prevent any subsetting}
-
-\item{normalize}{boolean: run standard normalization on assay. defaults to TRUE}
+\item{covariates}{named vector: names of covariates for hypoMap scvi model that will be added via this function. Changing this parameter or supplying the variables without the proper format can cause problems! defaults to: c(batch_var = "Batch_ID",inferred_sex = "inferred_sex.x",rpl_signature_expr_median = "rpl_signature_expr_median")}
 
 \item{sex_var}{column name with annotation of sample sex}
 
-\item{covariates}{named vector: names of covariates for hypoMap scvi model that will be added via this function. Changing this parameter or supplying the variables without the proper format can cause probelms! defaults to:}
-
-\item{global_seed}{seed}
+\item{...}{additional arguments to prepare_query}
 }
 \value{
 updated seurat object
 }
 \description{
-Function to prepare a Seurat object for embedding with releavnt covariates and metadata columns to work with HypoMap
+Function to prepare an object for embedding with relevant covariates and metadata columns to work with HypoMap.
+This will call prepare_query and additionally check the covariates and add them with a custom procedure (most likely does not work for other scvi models and reference objects)
 }

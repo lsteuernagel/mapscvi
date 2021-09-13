@@ -5,8 +5,9 @@
 \title{Prepare seurat object for mapping functions}
 \usage{
 prepare_query(
-  query_seurat_object,
+  object,
   suffix = "query",
+  metadata = NULL,
   assay = "RNA",
   subset_col = "",
   subset_values = NULL,
@@ -15,9 +16,9 @@ prepare_query(
 )
 }
 \arguments{
-\item{query_seurat_object}{Seurat object}
+\item{object}{input object: a Seurat, SingleCellExperiment or matrix-like object containing the raw (non-normalized) counts.}
 
-\item{suffix}{project name to clearly label various steps. defaults to 'query'}
+\item{suffix}{query project name. defaults to 'query'}
 
 \item{assay}{which assay from query_seurat_object. defaults to RNA}
 
@@ -28,6 +29,8 @@ prepare_query(
 \item{normalize}{boolean: run standard normalization on assay. defaults to TRUE}
 
 \item{global_seed}{seed}
+
+\item{metadata:}{optional metadata data.frame to overwrite default metadata with. rownames must correspond to colnames of object}
 }
 \value{
 updated seurat object
