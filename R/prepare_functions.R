@@ -1,42 +1,4 @@
 
-
-##########
-### update_gene_names
-##########
-
-#' Update gene ids
-#'
-#' Helper function to prepare seurat object gene ids for format used in reference
-#' Currently does nothing and just returns the same object.
-#'
-#' @param query_seurat_object Seurat object
-#' @param suffix project name to clearly label various steps. defaults to 'query'
-#' @param global_seed seed
-#'
-#' @return formatted seurat object
-#'
-#' @export
-#'
-#' @import SeuratObject Seurat
-#'
-#' @examples
-
-update_gene_names = function(query_seurat_object,suffix="query",global_seed=12345){
-
-
-  #TODO: procedures to map to gene names used in reference query
-
-  # from human ens ids
-
-  # from human gene names
-
-  # from mouse ens ids
-
-  return(query_seurat_object)
-
-}
-
-
 ##########
 ### prepare_query
 ##########
@@ -47,7 +9,7 @@ update_gene_names = function(query_seurat_object,suffix="query",global_seed=1234
 #'
 #' @param object input object: a Seurat, SingleCellExperiment or matrix-like object containing the raw (non-normalized) counts.
 #' @param suffix query project name. defaults to 'query'
-#' @param metadata: optional metadata data.frame to overwrite default metadata with. rownames must correspond to colnames of object
+#' @param metadata optional metadata data.frame to overwrite default metadata with. rownames must correspond to colnames of object
 #' @param assay which assay from query_seurat_object. defaults to RNA
 #' @param subset_col character value: metadata column in query_seurat_object that will be used to subset data. defaults to ''
 #' @param subset_values character vector: which values from subset_col should be kept. defaults to NULL which will prevent any subsetting
@@ -149,7 +111,11 @@ prepare_query = function(object,suffix="query",metadata =NULL,assay="RNA",subset
 
 prepare_query_hypoMap = function(object,covariates=c(batch_var = "Batch_ID",inferred_sex = "inferred_sex.x",rpl_signature_expr_median = "rpl_signature_expr_median"),sex_var = "Sex",...){
 
+  # run prepare query
   query_seurat_object = prepare_query(object=object,...)
+
+  # check gene ids
+  #if(rownames(query_seurat_object))
 
   # add missing variables for hypomap
   batch_var = covariates["batch_var"]
@@ -222,3 +188,43 @@ prepare_query_hypoMap = function(object,covariates=c(batch_var = "Batch_ID",infe
   return(query_seurat_object)
 }
 
+
+##########
+### update_gene_names
+##########
+
+#' Update gene ids
+#'
+#' Helper function to prepare seurat object gene ids for format used in reference
+#' Currently does nothing and just returns the same object.
+#'
+#' @param query_seurat_object query Seurat object
+#' @param reference_seurat_object reference_seurat_object. Defaults to NULL. Then reference_gene_identifiers will be used
+#' @param reference_gene_identifiers a character vector of gene identifiers
+#' @param query_species species
+#' @param reference_species species
+#'
+#' @return formatted seurat object
+#'
+#' @export
+#'
+#' @import SeuratObject Seurat
+#'
+#' @examples
+
+update_gene_names = function(query_seurat_object,reference_seurat_object=NULL,reference_gene_identifiers=NULL,query_species = NULL,reference_species =NULL){
+
+
+  # detect species and type of reference
+
+  # detect species and type of query
+
+  # from human ens ids
+
+  # from human gene names
+
+  # from mouse ens ids
+
+  return(query_seurat_object)
+
+}

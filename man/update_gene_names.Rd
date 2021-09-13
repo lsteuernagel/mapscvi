@@ -4,12 +4,24 @@
 \alias{update_gene_names}
 \title{Update gene ids}
 \usage{
-update_gene_names(query_seurat_object, suffix = "query", global_seed = 12345)
+update_gene_names(
+  query_seurat_object,
+  reference_seurat_object = NULL,
+  reference_gene_identifiers = NULL,
+  query_species = NULL,
+  reference_species = NULL
+)
 }
 \arguments{
-\item{query_seurat_object}{Seurat object}
+\item{query_seurat_object}{query Seurat object}
 
-\item{suffix}{project name to clearly label various steps. defaults to 'query'}
+\item{reference_seurat_object}{reference_seurat_object. Defaults to NULL. Then reference_gene_identifiers will be used}
+
+\item{reference_gene_identifiers}{a character vector of gene identifiers}
+
+\item{query_species}{species}
+
+\item{reference_species}{species}
 
 \item{global_seed}{seed}
 }

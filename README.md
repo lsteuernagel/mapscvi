@@ -116,11 +116,11 @@ plot_query_labels(query_seura_object=query_seurat_object,reference_seurat=refere
 
 <img src="man/figures/README-unnamed-chunk-7-1.png" width="100%" />
 
-## Preparing a Seurat object
-
-TODO: Showcase helper function and provide a guide on how to get to a
-Seurat object with the right format.
-
 ## Detailed walkthrough
 
-TODO: Explain all individual setup
+# 
+
+``` r
+# load("/beegfs/scratch/bruening_scratch/lsteuernagel/data/tmp_mapscvi/query_test_object.RData")
+# query_seurat_object
+```
