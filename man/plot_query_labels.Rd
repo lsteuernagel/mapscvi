@@ -12,7 +12,7 @@ plot_query_labels(
   overlay = FALSE,
   overlay_color = "red",
   overlay_alpha = 0.2,
-  overlay_pt_size = NULL,
+  query_pt_size = NULL,
   query_umap = "umap_scvi",
   reference_umap = "umap_scvi",
   labelonplot = TRUE,
@@ -36,7 +36,7 @@ plot_query_labels(
 
 \item{overlay_alpha}{= alpha for overlay plot}
 
-\item{overlay_pt_size}{numeric for pt size of query cells. defaults to NULL which will inherit the pt.size from the reference DimPlot}
+\item{query_pt_size}{numeric for pt size of query cells. defaults to NULL which will inherit the pt.size from the reference DimPlot}
 
 \item{query_umap}{name of query umap. defaults to "umap_scvi"}
 

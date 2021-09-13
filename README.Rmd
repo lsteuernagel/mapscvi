@@ -87,7 +87,7 @@ plot_query_labels(query_seura_object=query_romanov,reference_seurat=reference_hy
 Overlay them query over the reference. The overlay parameters allow to change the behavior of query points. Here we set labelonplot to True to include cluster labels on the plot. We can use the Seurat::DimPlot parameters to further adjust the plots. E.g. by decreasing the size of the labels.
 
 ```{r}
-plot_query_labels(query_seura_object=query_romanov,reference_seurat=reference_hypoMap,label_col="K169_named",overlay = TRUE,overlay_pt_size = 0.4,labelonplot = TRUE,label.size=1)
+plot_query_labels(query_seura_object=query_romanov,reference_seurat=reference_hypoMap,label_col="K169_named",overlay = TRUE,query_pt_size = 0.4,labelonplot = TRUE,label.size=1)
 ```
 
 ## Detailed walkthrough
@@ -155,7 +155,7 @@ head(sort(table(lamanno_seurat_object@meta.data$predicted),decreasing = TRUE),n 
 plot_query_labels(query_seura_object=lamanno_seurat_object,reference_seurat=reference_hypoMap,label_col="K169_named",overlay = FALSE,labelonplot = FALSE)
 ```
 ```{r}
-plot_query_labels(query_seura_object=lamanno_seurat_object,reference_seurat=reference_hypoMap,label_col="K169_named",overlay = TRUE,overlay_pt_size = 0.4,labelonplot = TRUE,label.size=1)
+plot_query_labels(query_seura_object=lamanno_seurat_object,reference_seurat=reference_hypoMap,label_col="K169_named",overlay = TRUE,query_pt_size = 0.4,labelonplot = TRUE,label.size=1)
 ```
 
 This obviously didn't work out very well.

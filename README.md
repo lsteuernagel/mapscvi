@@ -104,7 +104,7 @@ parameters to further adjust the plots. E.g. by decreasing the size of
 the labels.
 
 ``` r
-plot_query_labels(query_seura_object=query_romanov,reference_seurat=reference_hypoMap,label_col="K169_named",overlay = TRUE,overlay_pt_size = 0.4,labelonplot = TRUE,label.size=1)
+plot_query_labels(query_seura_object=query_romanov,reference_seurat=reference_hypoMap,label_col="K169_named",overlay = TRUE,query_pt_size = 0.4,labelonplot = TRUE,label.size=1)
 ```
 
 <img src="man/figures/README-unnamed-chunk-9-1.png" width="100%" />
@@ -273,7 +273,7 @@ plot_query_labels(query_seura_object=lamanno_seurat_object,reference_seurat=refe
 <img src="man/figures/README-unnamed-chunk-17-1.png" width="100%" />
 
 ``` r
-plot_query_labels(query_seura_object=lamanno_seurat_object,reference_seurat=reference_hypoMap,label_col="K169_named",overlay = TRUE,overlay_pt_size = 0.4,labelonplot = TRUE,label.size=1)
+plot_query_labels(query_seura_object=lamanno_seurat_object,reference_seurat=reference_hypoMap,label_col="K169_named",overlay = TRUE,query_pt_size = 0.4,labelonplot = TRUE,label.size=1)
 ```
 
 <img src="man/figures/README-unnamed-chunk-18-1.png" width="100%" />

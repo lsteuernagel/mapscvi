@@ -17,7 +17,7 @@
 #' @param overlay overlay query onto label
 #' @param overlay_color color of overlay points
 #' @param overlay_alpha = alpha for overlay plot
-#' @param overlay_pt_size numeric for pt size of query cells. defaults to NULL which will inherit the pt.size from the reference DimPlot
+#' @param query_pt_size numeric for pt size of query cells. defaults to NULL which will inherit the pt.size from the reference DimPlot
 #' @param query_umap name of query umap. defaults to "umap_scvi"
 #' @param reference_umap name of reference umap. defaults to "umap_scvi"
 #' @param labelonplot put labels on plot. defaults to TRUE
@@ -35,7 +35,7 @@
 #'
 #'
 
-plot_query_labels = function(query_seura_object,reference_seurat,label_col,label_col_query = "predicted", overlay = FALSE, overlay_color = "red", overlay_alpha = 0.2,overlay_pt_size=NULL, query_umap = "umap_scvi",reference_umap="umap_scvi",labelonplot=TRUE,noaxes=TRUE,nolegend=TRUE,...){
+plot_query_labels = function(query_seura_object,reference_seurat,label_col,label_col_query = "predicted", overlay = FALSE, overlay_color = "red", overlay_alpha = 0.2,query_pt_size=NULL, query_umap = "umap_scvi",reference_umap="umap_scvi",labelonplot=TRUE,noaxes=TRUE,nolegend=TRUE,...){
 
   # check
   if(is.null(reference_seurat)){stop("Please provide reference seurat with latent space, umap and metadata")}
@@ -59,10 +59,10 @@ plot_query_labels = function(query_seura_object,reference_seurat,label_col,label
       p_full$layers[[2]] =NULL
     }
     # get pt size
-    if(is.null(overlay_pt_size)){
+    if(is.null(query_pt_size)){
       pt_size = p_full[[1]]$layers[[1]]$aes_params$size
     }else{
-      pt_size = overlay_pt_size
+      pt_size = query_pt_size
     }
     # plot query points on top
     p_full=p_full+ggplot2::geom_point(data=plot_data,ggplot2::aes_string(x=colnames(plot_data)[1],y=colnames(plot_data)[2]),size=pt_size,color=overlay_color)
@@ -75,8 +75,16 @@ plot_query_labels = function(query_seura_object,reference_seurat,label_col,label
     }
     # browser()
     # side-by-side
-    p1 = Seurat::DimPlot(reference_seurat,group.by = label_col,reduction = reference_umap,label = labelonplot,...)
-    p2 = Seurat::DimPlot(query_seura_object,group.by = label_col_query,reduction = query_umap,label = labelonplot,...)
+    xlims = c(min(reference_seurat@reductions[[reference_umap]]@cell.embeddings[,1])-0.5,max(reference_seurat@reductions[[reference_umap]]@cell.embeddings[,1])+0.5)
+    ylims = c(min(reference_seurat@reductions[[reference_umap]]@cell.embeddings[,2])-0.5,max(reference_seurat@reductions[[reference_umap]]@cell.embeddings[,2])+0.5)
+    p1 = Seurat::DimPlot(reference_seurat,group.by = label_col,reduction = reference_umap,label = labelonplot,...)+xlim(xlims)+ylim(ylims)
+    # get pt size
+    if(is.null(query_pt_size)){
+      pt_size = p1[[1]]$layers[[1]]$aes_params$size
+    }else{
+      pt_size = query_pt_size
+    }
+    p2 = Seurat::DimPlot(query_seura_object,group.by = label_col_query,reduction = query_umap,label = labelonplot,pt.size = pt_size,...)+xlim(xlims)+ylim(ylims)
     if(noaxes){
       p1 = p1+Seurat::NoAxes()
       p2 = p2+Seurat::NoAxes()
