@@ -2,7 +2,68 @@
 # This file contains functions to prepare a query seurat for mapping with mapscvi.
 
 ##########
-### transform_seurat
+### convert_to_seurat
+##########
+
+#' Convert various objects to seurat object.
+#'
+#' Helper function to prepare seurat object from matrix, SingleCellObject or ...
+#'
+#' @param object object that will be converted to seurat. For matrix: expects columns as cells.
+#' @param suffix query project name. defaults to 'query'
+#' @param metadata: optional metadata data.frame. rownames must correspond to colnames of object
+#' @param global_seed seed
+#'
+#' @return formatted seurat object
+#'
+#' @export
+#'
+#' @import SeuratObject Seurat SingleCellExperiment SummarizedExperiment
+#'
+#' @examples
+
+convert_to_seurat = function(object,suffix="query",metadata=NULL,global_seed=12345){
+
+  # Convert object to seurat
+  if(length(intersect(base::class(object),c("Seurat","SeuratObject")))>0){
+    query_seurat_object = object
+    if(!is.null(metadata)){
+      if(base::all(rownames(metadata) == colnames(query_seurat_object))){
+        message("Overwriting Seurat metadata with provided metadata")
+        temp_metadata = metadata
+      }
+    }
+  } else if(length(intersect(base::class(object),c("SingleCellExperiment")))>0){
+    count_data= as(SingleCellExperiment::counts(object), "dgCMatrix")
+    temp_metadata <- SummarizedExperiment::colData(object)
+    if(!is.null(metadata)){
+      if(length(setdiff(rownames(metadata),colnames(count_data))) == 0){
+        message("Overwriting SingleCellExperiment colData with provided metadata")
+        temp_metadata = metadata
+      }
+    }
+    query_seurat_object = SeuratObject::CreateSeuratObject(counts = count_data,project = suffix,meta.data = temp_metadata)
+  } else if(length(intersect(base::class(object),c("matrix","dgCMatrix","Matrix","data.frame")))>0){
+    # base::class(object) %in% c("matrix","dgCMatrix","Matrix","data.frame")
+    count_data = as(object, "dgCMatrix")
+    temp_metadata = data.frame(Cell_ID = colnames(count_data), Sample_ID = paste0(suffix,"_sample_1"))
+    if(!is.null(metadata)){
+      if(length(setdiff(rownames(metadata),colnames(count_data))) == 0){
+        message("Overwriting default metadata with provided metadata")
+        temp_metadata = metadata
+      }
+    }
+    query_seurat_object = SeuratObject::CreateSeuratObject(counts = count_data,project = suffix,meta.data = temp_metadata)
+  }else{
+    stop("Error: Cannot convert provided object to Seurat. Please provide a Seurat object, a SingleCellExperiment or matrix-like object with cells as columns.")
+  }
+
+  return(query_seurat_object)
+
+}
+
+##########
+### update_gene_names
 ##########
 
 #' Update gene ids
@@ -22,7 +83,7 @@
 #'
 #' @examples
 
-transform_seurat = function(query_seurat_object,suffix="query",global_seed=12345){
+update_gene_names = function(query_seurat_object,suffix="query",global_seed=12345){
 
   #TODO: check that Cell_ID exists and combine with suffix
 
@@ -48,7 +109,7 @@ transform_seurat = function(query_seurat_object,suffix="query",global_seed=12345
 #' Generic Function to prepare a Seurat object for embedding
 #'
 #' @param query_seurat_object Seurat object
-#' @param suffix project name to clearly label various steps. defaults to 'query'
+#' @param suffix query project name. defaults to 'query'
 #' @param assay which assay from query_seurat_object. defaults to RNA
 #' @param subset_col character value: metadata column in query_seurat_object that will be used to subset data. defaults to ''
 #' @param subset_values character vector: which values from subset_col should be kept. defaults to NULL which will prevent any subsetting

@@ -59,3 +59,11 @@
 # save(reference_hypoMap,file = "/beegfs/scratch/bruening_scratch/lsteuernagel/data/tmp_mapscvi/reference_hypoMap.RData")
 #
 
+
+####
+#
+# require(scRNAseq)
+# sce <- LaMannoBrainData(which = "mouse-adult",ensembl=FALSE)
+# object = sce
+# object = SingleCellExperiment::counts(object)
+
