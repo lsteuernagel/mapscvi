@@ -42,11 +42,20 @@
 #
 #
 
+# # make new seurat object with reduced size
 # reference_hypoMap = CreateSeuratObject(neuron_map_seurat@assays$RNA@counts,project = "HypoMap_reference",meta.data = neuron_map_seurat@meta.data)
+# # add reductions back in
 # reference_hypoMap@reductions = neuron_map_seurat@reductions
+# # overwrite counts with empty sparse matrix to save space
+# empty_matrix <- Matrix::sparseMatrix(i = integer(0), j = integer(0), dims = reference_hypoMap@assays$RNA@counts@Dim, dimnames = reference_hypoMap@assays$RNA@counts@Dimnames)
+# empty_matrix <- as(empty_matrix, "dgCMatrix")
+# reference_hypoMap@assays$RNA@counts <- empty_matrix
+# reference_hypoMap@assays$RNA@data <- empty_matrix # error is okay
+# # overwrite other slots with empty dummy matrix
 # dummy=matrix(data = as.numeric())
-# reference_hypoMap@assays$RNA@counts <- dummy[,-1] # error is okay
-# reference_hypoMap@assays$RNA@data <- dummy[,-1] # error is okay
 # reference_hypoMap@assays$RNA@scale.data <- dummy[,-1] # error is okay
 # reference_hypoMap@assays$RNA@meta.features <- as.data.frame(dummy[,-1])
+# print(object.size(reference_hypoMap) / 1000000)
 # save(reference_hypoMap,file = "/beegfs/scratch/bruening_scratch/lsteuernagel/data/tmp_mapscvi/reference_hypoMap.RData")
+#
+
