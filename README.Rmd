@@ -38,7 +38,7 @@ This package allows to embed new single-cell data stored in Seurat objects into 
 
 The functions used to do this can also be used to embed data into other models.
 
-An example workflow that emebds the romanov et al. smart-seq dataset into the HypoMap:
+An example workflow that embeds the Romanov et al. smart-seq dataset into the HypoMap:
 
 ```{r, message=FALSE, warning=FALSE}
 library(mapscvi)
@@ -66,7 +66,7 @@ load("/beegfs/scratch/bruening_scratch/lsteuernagel/data/tmp_mapscvi/reference_h
 
 This wrapper function executes all required mapping steps. We provide the query object as well as a column from HypoMap which we want to predict.
 
-```{r echo=TRUE, message=FALSE, warning=FALSE, include=FALSE}
+```{r echo=TRUE, message=FALSE, warning=FALSE, results = 'hide'}
 query_romanov = map_new_seurat_hypoMap(query_romanov,suffix="query_romanov",label_col="K169_named",max_epochs=20,reference_seurat=reference_hypoMap)
 names(query_romanov@reductions)
 ```
@@ -94,15 +94,19 @@ plot_query_labels(query_seura_object=query_romanov,reference_seurat=reference_hy
 
 This section contains a more detailed walkthrough of the functions that are executed when calling 'map_new_seurat_hypoMap'.
 
-For this we will embed with the mouse LaMannoBrainData stored in a SingleCellExperiment (available via the scRNAseq package).
+For this we will embed the mouse LaMannoBrainData stored in a SingleCellExperiment (available via the scRNAseq package) in the HypoMap.
+
+```{r results = 'hide'}
+load("/beegfs/scratch/bruening_scratch/lsteuernagel/data/tmp_mapscvi/sce_lamanno_da.RData")
+```
 
 ```{r}
-load("/beegfs/scratch/bruening_scratch/lsteuernagel/data/tmp_mapscvi/sce_lamanno_da.RData")
 sce_lamanno_da
 ```
+
 The prepare_query function is able to load Seurat, SingleCellExperiment or matrix objects for mapping.
 
-Here we are using the prepare_query_hypoMap that extends the more generic prepare_query function with code to to automatically add metadata variables that are required for mapping to the HypoMap model. We also normalize the data, however for the scvi mapping raw counts are required!
+Here we are using the prepare_query_hypoMap that extends the more generic prepare_query function with code to to automatically add metadata variables that are required for mapping to the HypoMap model. The function can also normalize the data, however for the scvi mapping raw counts are required!
 
 ```{r message=FALSE, warning=FALSE}
 lamanno_seurat_object = prepare_query_hypoMap(sce_lamanno_da,suffix="lamanno_da",normalize=TRUE)
@@ -111,9 +115,9 @@ lamanno_seurat_object
 
 This new seurat object is compatible with the downstream functions for mapping the data.
 
-Next predict_query can be used to embed the query data into the latent space of scvi. We have to specify a query path, which defaults to the HypoMap reference that is part of the package and the number of epochs for training during mapping (10-20 should be sufficient. TODO: test this!).
+Next predict_query can be used to embed the query data into the latent space of scvi. We have to specify a query path (which defaults to the HypoMap reference which is part of the package) and the number of epochs for training during mapping (10-20 should be sufficient. TODO: test this!).
 
-```{r message=FALSE, warning=FALSE, include=FALSE}
+```{r message=FALSE, warning=FALSE, results = 'hide'}
 model_path = "/beegfs/scratch/bruening_scratch/lsteuernagel/data/scHarmonize/hypothalamusMapNeurons_v4/harmonization_results/hypothalamus_neurons_reference/hypothalamus_neurons_reference_model/"
 max_epochs = 20
 lamanno_seurat_object = predict_query(lamanno_seurat_object,model_path,max_epochs = max_epochs)
@@ -123,7 +127,7 @@ lamanno_seurat_object = predict_query(lamanno_seurat_object,model_path,max_epoch
 names(lamanno_seurat_object@reductions)
 ```
 
-The scvi reduction is a pca-like low dimensional space that can be used to embed the data into the same UMAP as the reference object. This requires an existsing UMAP model in the reference Seurat object that was calculated based on teh same scvi latent space.
+The scvi reduction is a pca-like low dimensional space that can be used to embed the data into the same UMAP as the reference object. This requires an existing UMAP model in the reference Seurat object that was calculated based on the same scvi latent space.
 
 We load the reference seurat object.
 
@@ -133,9 +137,9 @@ load("/beegfs/scratch/bruening_scratch/lsteuernagel/data/tmp_mapscvi/reference_h
 
 Then we can calculate nearest neighbors and UMAP based on the reference. Additionally we can project labels (any categorical metadata column from the reference) using the same nearest neighbor graph. This helps with consistency between label propagation and UMAP. However there might be more accurate ways to propagate labels using other classifiers such as a random forest or scANVI.
 
-To propagate labels with the project_query function we can provide a vector of the same lengths as the reference cells (and same order!). preferabbly a column from the metadata of the reference seurat object.
+To propagate labels with the project_query function we can provide a vector of the same length as the reference cells (and same order!). Preferably this is a column from the metadata of the reference seurat object.
 
-```{r message=TRUE, warning=TRUE, include=FALSE}
+```{r message=TRUE, warning=TRUE, results = 'hide'}
 cluster_labels = reference_hypoMap@meta.data$K169_named
 reference_reduction = "scvi"
 lamanno_seurat_object = project_query(query_seurat_object = lamanno_seurat_object,
@@ -145,20 +149,27 @@ lamanno_seurat_object = project_query(query_seurat_object = lamanno_seurat_objec
                                       label_vec =cluster_labels)
 ```
 
-This can then be used to plot the results:
-
-```{r}
-head(sort(table(lamanno_seurat_object@meta.data$predicted),decreasing = TRUE),n = 10)
-```
+This can then be used to plot the results side-by side:
 
 ```{r}
 plot_query_labels(query_seura_object=lamanno_seurat_object,reference_seurat=reference_hypoMap,label_col="K169_named",overlay = FALSE,labelonplot = FALSE)
 ```
+
+Or with overlay:
+
 ```{r}
 plot_query_labels(query_seura_object=lamanno_seurat_object,reference_seurat=reference_hypoMap,label_col="K169_named",overlay = TRUE,query_pt_size = 0.4,labelonplot = TRUE,label.size=1)
 ```
 
 This obviously didn't work out very well.
+
+Most cells were mapped to the same celltype in the middle of the UMAP, which is likely a result of missing 'true' neighbors:
+
+```{r}
+head(sort(table(lamanno_seurat_object@meta.data$predicted),decreasing = TRUE),n = 10)
+```
+
+
 
 TODO: Add some indicators for quality of mapping.
 
