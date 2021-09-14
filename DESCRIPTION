@@ -5,7 +5,7 @@ Authors@R:
     person("Lukas", "Steuernagel", email = "jane@example.com", role = c("aut", "cre"))
 Description: Map single cell expression data in a seurat object into reference scvi latent space and reference umap based on seurat.
 License: MIT + file LICENSE
-Imports: rlang, dplyr, Seurat, SeuratObject, SeuratDisk, ggplot2, cowplot
+Imports: rlang, dplyr, Seurat, SeuratObject, SeuratDisk, ggplot2, cowplot, SingleCellExperiment
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)

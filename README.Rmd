@@ -96,7 +96,7 @@ This section contains a more detailed walkthrough of the functions that are exec
 
 For this we will embed the mouse LaMannoBrainData stored in a SingleCellExperiment (available via the scRNAseq package) in the HypoMap.
 
-```{r results = 'hide'}
+```{r message=FALSE, warning=FALSE, results = 'hide'}
 load("/beegfs/scratch/bruening_scratch/lsteuernagel/data/tmp_mapscvi/sce_lamanno_da.RData")
 ```
 
@@ -131,7 +131,7 @@ The scvi reduction is a pca-like low dimensional space that can be used to embed
 
 We load the reference seurat object.
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 load("/beegfs/scratch/bruening_scratch/lsteuernagel/data/tmp_mapscvi/reference_hypoMap.RData")
 ```
 

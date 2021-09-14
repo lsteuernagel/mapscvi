@@ -20,7 +20,7 @@
 #'
 #' @export
 #'
-#' @import Seurat SeuratObject rlang dplyr
+#' @import Seurat SeuratObject rlang dplyr SingleCellExperiment
 #'
 #' @examples
 
