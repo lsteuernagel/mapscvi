@@ -102,8 +102,10 @@ predict_query = function(query_seurat_object,model_path,query_reduction="scvi",m
 
     # call python script
     output_file = paste0(temp_dir,"predicted_",temp_seurat@project.name,".txt")
-    system(paste0("python3 -u map_scvi.py ",updated_name," ",model_path," ",output_file," ",max_epochs))
-
+    system(paste0("python3 -u ",system.file("python/map_scvi.py", package = "mapscvi")," ",updated_name," ",model_path," ",output_file," ",max_epochs))
+    #system(paste0("python3 -u inst/python/map_scvi.py ",updated_name," ",model_path," ",output_file," ",max_epochs))
+    # system(paste0("python3 -u python/map_scvi.py ",updated_name," ",model_path," ",output_file," ",max_epochs))
+    #system.file("inst/python/map_scvi.py",package = "mapscvi",lib.loc = "/beegfs/scratch/bruening_scratch/lsteuernagel/R/user_lib/x86_64-pc-linux-gnu-library/4.0/mapscvi/")
     # load results into R
     scvi_prediction = read.table(output_file)
     scvi_prediction = as.matrix(scvi_prediction)

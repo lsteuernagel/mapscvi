@@ -20,7 +20,7 @@
 #'
 #' @export
 #'
-#' @import Seurat SeuratObject rlang dplyr SingleCellExperiment
+#' @import Seurat SeuratObject rlang dplyr SingleCellExperiment SummarizedExperiment
 #'
 #' @examples
 
@@ -49,6 +49,7 @@ prepare_query = function(object,suffix="query",metadata =NULL,assay="RNA",subset
     # base::class(object) %in% c("matrix","dgCMatrix","Matrix","data.frame")
     count_data = as(object, "dgCMatrix")
     temp_metadata = data.frame(Cell_ID = colnames(count_data), Sample_ID = paste0(suffix,"_sample_1"))
+    rownames(temp_metadata) = temp_metadata$Cell_ID
     if(!is.null(metadata)){
       if(length(setdiff(rownames(metadata),colnames(count_data))) == 0){
         message("Overwriting default metadata with provided metadata")
@@ -63,7 +64,7 @@ prepare_query = function(object,suffix="query",metadata =NULL,assay="RNA",subset
   # check that counts exists:
   if(dim(query_seurat_object@assays[[assay]]@counts)[1]==0){stop("Matrix in @counts slot seems non-existent. Please provide a valid matrix with raw counts per cell in the @counts slot.")}
   # check that counts does not contain float values
-  if(sum(query_seurat_object@assays[[assay]]@counts[,1])%%1!=0){stop("Found float values in @counts slot. Please provide a valid matrix with raw counts per cell in the @counts slot.")}
+  if(sum(query_seurat_object@assays[[assay]]@counts[,1])%%1!=0){message("Warning: Found float values in @counts slot. Please provide a valid matrix with raw counts per cell in the @counts slot.")}
 
   # subset with certain values of a metadata column if wanted
   if(subset_col %in% colnames(query_seurat_object@meta.data) & !is.null(subset_values)){
