@@ -40,6 +40,7 @@ predict_query = function(query_seurat_object,model_path,query_reduction="scvi",m
   rownames(var_df) = var_df$var_names
   # make a matrix with included variable genes in query
   included_var_features = intersect(var_features,var_df$var_names)
+  # if I don't subset here, then a bigger anndata will be exported but the library size prior will be estimated correctly (update: no because the original model only used the x var genes to estimate lib size)
   matrix_for_anndata = as.matrix(SeuratObject::GetAssayData(query_seurat_object,slot='counts',assay=assay)[included_var_features,])
   # for scvi to work we also need the others: we add them as all zero columns at the end
   missing_var_features = setdiff(var_features,var_df$var_names)
@@ -50,6 +51,7 @@ predict_query = function(query_seurat_object,model_path,query_reduction="scvi",m
   # make new var_df
   var_df = data.frame(var_names = rownames(matrix_for_anndata))
   rownames(var_df) = var_df$var_names
+  message("Matrix for anndata dim ",dim(matrix_for_anndata)[1]," ",dim(matrix_for_anndata)[2])
 
   ### reticulate code section:
   if(use_reticulate){
@@ -319,4 +321,84 @@ map_new_seurat_hypoMap = function(query_seurat_object,suffix="query",assay="RNA"
 
   # return
   return(query_seurat_object)
+}
+
+
+##########
+### check_quality
+##########
+
+#' Estimate quality of mapped data
+#'
+#' Calculates a shared KNN to see how well query cells mix with reference cells and how the distances are.
+#'
+#' @inheritParams project_query
+#' @param reference_seurat reference seurat
+#' @param reduction_name name of scvi reduction in reference AND query. Also expect a umap named as 'umap_'reference_reduction
+#'
+#' @return query_seurat_object with quality results in metadata
+#'
+#' @export
+#'
+#' @import SeuratObject Seurat dplyr
+#'
+#' @examples
+
+check_quality = function(query_seurat_object,reference_seurat,reduction_name="scvi",k_param=30,global_seed=12345){
+
+  # check that reduction_name exists
+  #TODO
+
+  # add query boolean:
+  query_seurat_object@meta.data$query =TRUE
+  # merge objects
+  merged_object = merge(reference_seurat,query_seurat_object,merge.dr = reduction_name)
+  # set query variable to false
+  merged_object@meta.data$query[is.na(merged_object@meta.data$query)] =FALSE
+  # need to run FindNeighbors
+  merged_object = FindNeighbors(merged_object,reduction =  reduction_name,k.param = k_param,graph.name = "new_nn",
+                                return.neighbor = TRUE,dims = 1:ncol(merged_object@reductions[[reduction_name]]@cell.embeddings))
+  nn_idx = merged_object@neighbors$new_nn@nn.idx
+  nn_dist = merged_object@neighbors$new_nn@nn.dist
+
+  # use nn_idx to get number of query neighbors for each query cells
+  query_freq = apply(nn_idx[which(merged_object@meta.data$query),2:ncol(nn_idx)],1,function(row,query){
+    freq_batch = sum(query[row]) / length(row)
+  }, query = merged_object@meta.data$query)
+  query_freq = data.frame(Cell_ID = merged_object@meta.data$Cell_ID[merged_object@meta.data$query], query_neighbor_oct = query_freq)
+
+  # get average distance to all neighbors of query cells
+  query_dists = apply(nn_dist[which(merged_object@meta.data$query),2:ncol(nn_dist)],1,median)
+  query_dists = data.frame(Cell_ID = merged_object@meta.data$Cell_ID[merged_object@meta.data$query], median_dist_to_neighbors = query_dists)
+
+  # for each query cell: get average dist of its reference neighbors
+  query_neighbor_dists = apply(nn_idx[which(merged_object@meta.data$query),2:ncol(nn_idx)],1,function(x,query,nn_dist){
+    relevant_idx = which(!query[x])
+    #print(relevant_idx)
+    #val = median(apply(nn_dist[relevant_idx,2:ncol(nn_dist)],1,median))
+    if(length(relevant_idx)>1){
+      val = apply(nn_dist[relevant_idx,2:ncol(nn_dist)],1,median)
+      val = median(val)
+    }else if(length(relevant_idx)==1){
+      val = median(nn_dist[relevant_idx,2:ncol(nn_dist)])
+    }else{
+      val = NA
+    }
+    val
+  },query = merged_object@meta.data$query,nn_dist=nn_dist)
+  query_neighbor_dists = data.frame(Cell_ID = merged_object@meta.data$Cell_ID[merged_object@meta.data$query], median_dist_refNeighbors = query_neighbor_dists)
+
+  # combine results
+  quality_df = dplyr::left_join(query_freq,query_dists,by="Cell_ID")
+  quality_df = dplyr::left_join(quality_df,query_neighbor_dists,by="Cell_ID")
+  quality_df$corrected_nn_dist = quality_df$median_dist_to_neighbors / quality_df$median_dist_refNeighbors
+  quality_df$quality_score = quality_df$corrected_nn_dist* (1 + quality_df$query_neighbor_oct)
+
+  # flag problematic
+  query_seurat_object@meta.data = dplyr::left_join(query_seurat_object@meta.data,quality_df,by="Cell_ID")
+  rownames(query_seurat_object@meta.data) = query_seurat_object@meta.data$Cell_ID
+
+  # return
+  return(query_seurat_object)
+
 }

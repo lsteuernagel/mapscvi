@@ -186,8 +186,17 @@ prepare_query_hypoMap = function(object,suffix="query",covariates=c(batch_var = 
   if(!rpl_signature_expr_median %in% colnames(query_seurat_object@meta.data)){
     message("Variable '",rpl_signature_expr_median,"' not found. Adding to data.")
     rpl_signature = as.character(c("Rpl32", "Rpl26", "Rpl22l1", "Rps19", "Rpl39", "Rps9", "Rps15", "Rpl27a", "Rps25", "Rps20", "Rpl36al", "Rps8", "Rpl6", "Rps23", "Rpl19", "Cox7a2l", "Rpl7", "Rps26-ps1", "Rps27a", "Rps16", "Rpl29", "Rps3a1", "Rps4x", "Rps6", "Rpl17", "Rps18-ps3", "Rpl9-ps6", "Rps24", "Rps12-ps3", "Rps7", "Rpl21", "Rpl36-ps3", "Rpl13-ps3", "Rpl23a-ps3", "Rpl10a", "Rpl6l", "Rpl27-ps3", "Rpl7a-ps5", "Cox7c", "Jund", "Rpl10"))
-    rpl_signature_expr = Seurat::FetchData(query_seurat_object,vars = rpl_signature)
-    query_seurat_object@meta.data$rpl_signature_expr_median = apply(rpl_signature_expr,1,median,na.rm=TRUE)
+    rpl_signature_expr_median = tryCatch({
+      rpl_signature_expr = Seurat::FetchData(query_seurat_object,vars = rpl_signature)
+      rpl_signature_expr_median = apply(rpl_signature_expr,1,median,na.rm=TRUE)
+      rpl_signature_expr_median
+    },
+    error=function(cond) {
+      message("Cannot determine rpl signature. returning 0")
+      # Choose a return value in case of error
+      return(0)
+    })
+    query_seurat_object@meta.data$rpl_signature_expr_median = rpl_signature_expr_median
   }
 
   # return
