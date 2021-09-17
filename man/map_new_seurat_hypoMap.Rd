@@ -53,4 +53,5 @@ formatted seurat object
 }
 \description{
 Wrapper functions that executes low level functions to prepare, predict and project new data
+NOT IMPLEMENTED YET!
 }

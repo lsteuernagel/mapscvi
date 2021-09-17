@@ -268,6 +268,7 @@ propagate_labels = function(nn_idx,label_vec){
 #' Map a query seurat onto a reference
 #'
 #' Wrapper functions that executes low level functions to prepare, predict and project new data
+#' NOT IMPLEMENTED YET!
 #'
 #' @inheritParams prepare_query
 #' @inheritParams predict_query
@@ -402,3 +403,70 @@ check_quality = function(query_seurat_object,reference_seurat,reduction_name="sc
   return(query_seurat_object)
 
 }
+
+##########
+### check_quality_markers
+##########
+
+#' Estimate quality of mapped data based on marker genes
+#'
+#' Check marker gene expression in query cells based on predicted clusters
+#'
+#' @inheritParams project_query
+#' @param reference_seurat reference seurat
+#' @param reduction_name name of scvi reduction in reference AND query. Also expect a umap named as 'umap_'reference_reduction
+#'
+#' @return query_seurat_object with quality results in metadata
+#'
+#' @export
+#'
+#' @import SeuratObject Seurat dplyr
+#'
+#' @examples
+
+check_quality_markers = function(query_seurat_object,reference_seurat,reduction_name="scvi",k_param=30,global_seed=12345){
+
+
+  #TODO
+
+  # function:
+
+  # marker_gene_stats_percell=sapply(1:ncol(query_paul_neurons@assays$RNA@data),function(i,min_norm_expr=0.01,min_zscore=2,exclude_same_predicted=F,markers_n=20,norm_counts,predicted_cluster,marker_dataframe){
+  #   # get cluster markers
+  #   cluster_markers = unique(marker_dataframe$gene[marker_dataframe$cluster_name == predicted_cluster[i]])
+  #   cluster_markers = intersect(cluster_markers,rownames(norm_counts))
+  #   # get expression of cluster markers
+  #   cluster_markers_expression = norm_counts[cluster_markers,i]
+  #   cluster_markers_expression[cluster_markers_expression<min_norm_expr] = 0
+  #   cluster_markers_expression[cluster_markers_expression>=min_norm_expr] = 1
+  #   # how many markers are expresse by cell
+  #   pct_markers_expressed = sum(cluster_markers_expression) / length(cluster_markers)
+  #
+  #   # check markers over all cells and calculate zscore
+  #   if(exclude_same_predicted){
+  #     exclude_cells = colnames(norm_counts)[predicted_cluster==predicted_cluster[i]]
+  #     exclude_cells=exclude_cells[exclude_cells!=colnames(norm_counts)[i]]
+  #     over_all = as.matrix(norm_counts[cluster_markers,!colnames(norm_counts) %in% exclude_cells])
+  #     print(exclude_cells)
+  #   }else{
+  #     over_all = as.matrix(norm_counts[cluster_markers,])
+  #   }
+  #   over_all_zscore = t(apply(over_all,1,function(x){return((x-mean(x)) / (sd(x)))}))
+  #   zscore_of_cell =over_all_zscore[,colnames(norm_counts)[i]]
+  #   # how many markers have high zscore in cell
+  #   pct_markers_enriched =length(which(zscore_of_cell>min_zscore)) / length(cluster_markers)
+  #
+  #   # get top marker genes
+  #   top_markers = names(sort(zscore_of_cell[zscore_of_cell>min_zscore],decreasing = TRUE))
+  #   if(length(top_markers)>markers_n){top_markers=top_markers[1:markers_n]}
+  #
+  #   # return result
+  #   entry = data.frame(Cell_ID = colnames(norm_counts)[i],pct_markers_expressed,pct_markers_enriched,top_markers=paste0(top_markers,collapse = "|"))
+  #   entry
+  # },norm_counts = query_paul_neurons@assays$RNA@data,predicted_cluster=query_paul_neurons@meta.data$predicted,marker_dataframe=marker_dataframe,simplify=FALSE)
+  # marker_gene_stats_percell = do.call(rbind,marker_gene_stats_percell)
+
+  return(query_seurat_object)
+
+}
+
