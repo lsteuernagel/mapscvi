@@ -2,7 +2,7 @@
 % Please edit documentation in R/quality_functions.R
 \name{check_distance_neighbors}
 \alias{check_distance_neighbors}
-\title{Estimate quality of mapped data}
+\title{Estimate quality of mapped data based on distances of query cells from reference cells}
 \usage{
 check_distance_neighbors(
   query_seurat_object,
@@ -34,10 +34,9 @@ check_distance_neighbors(
 }
 \value{
 query_seurat_object with quality results in metadata
-median_dist_to_neighbors: what is the median distance of a query cell to all neighbor cells
-median_dist_refNeighbors: for all neighbor cells from the reference: what are their median distances
-normalized_nn_distance: median_dist_to_neighbors / median_dist_refNeighbors (how comparable are the query cells distances to their neighboring cell distances)
+nn_distance_reference: what is the median distance of a query cell to all neighbor cells in reference
+normalized_nn_distance: nn_distance_reference / median_dist_refNeighbors (how comparable are the query cells distances to their neighboring cell distances)
 }
 \description{
-Calculates a shared KNN to see how well query cells mix with reference cells and how the distances are.
+Calculates average distance to reference neighbors and normalized average distances based on average distances of these reference neighbors within the reference dataset.
 }

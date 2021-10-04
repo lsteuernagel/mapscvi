@@ -6,6 +6,7 @@ Authors@R:
 Description: Map single cell expression data in a seurat object into reference scvi latent space and reference umap based on seurat.
 License: MIT + file LICENSE
 Imports: rlang, dplyr, Seurat, SeuratObject, SeuratDisk, ggplot2, cowplot, SingleCellExperiment, SummarizedExperiment, stringr
+Suggests: networkD3, ggtree
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)

@@ -100,7 +100,7 @@ For this we will embed the mouse LaMannoBrainData stored in a SingleCellExperime
 load("/beegfs/scratch/bruening_scratch/lsteuernagel/data/tmp_mapscvi/sce_lamanno_da.RData")
 ```
 
-```{r}
+```{r, echo=TRUE, message=FALSE, warning=FALSE, results = 'hide'}
 sce_lamanno_da
 ```
 

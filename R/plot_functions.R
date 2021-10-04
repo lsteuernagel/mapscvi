@@ -104,3 +104,119 @@ plot_query_labels = function(query_seura_object,reference_seurat,label_col,label
 ##########
 ### plot propagation statistics
 ##########
+
+#' Plot propagation statistics about query column
+#'
+#' Determines over or und represented clusters
+#' TODO: add description
+#'
+#' @param query_seura_object query seurat object
+#' @param reference_seurat reference seurat object
+#' @param label_col the column name in reference_map metadata with labels to propagate
+#' @param label_col_query he column name in query_seura_object metadata with labels to propagate
+#' @param return_data return data and / or  plot
+#'
+#' @return plot or data behind plot
+#'
+#' @export
+#'
+#' @import SeuratObject Seurat cowplot ggplot2
+#'
+#' @examples
+#'
+#'
+
+plot_propagation_stats = function(query_seura_object,reference_seurat,label_col,label_col_query = "predicted",return_data=FALSE){
+
+  # TODO: add code!
+
+
+  if(return_data){
+    return(propagation_stats)
+  }
+}
+
+
+##########
+### plot_cluster_tree
+##########
+
+#' Plot metadata entries in cluster tree using ggtree
+#'
+#' TODO: add description
+#' TODO: add reference to ggtree vignette
+#'
+#' @param treedata TODO
+#' @param metadata TODO
+#' @param leaf_level which level to use as leaves ?
+#'
+#' @return ggtree object or plot
+#'
+#' @export
+#'
+#' @import SeuratObject Seurat cowplot ggplot2
+#'
+#' @examples
+#'
+#'
+
+plot_cluster_tree = function(treedata,metadata,leaf_level){
+
+  # optional use of packages: ggtree imports also tidytree and treeio!
+  if (!requireNamespace("ggtree", quietly = TRUE)) {
+    warning("The ggtree package must be installed to use this functionality")
+    #Either exit or do something without rgl
+    return(NULL)
+  }
+
+  # TODO: add code!
+
+}
+
+
+
+##########
+### plot_sankey_comparison
+##########
+
+#' Plot comparison between reference and query using sankey plots
+#'
+#' TODO: add description
+#'
+#' @param metadata TODO
+#' @param return_data
+#'
+#' @return ggtree object or plot
+#'
+#' @export
+#'
+#' @import SeuratObject Seurat cowplot ggplot2
+#'
+#' @examples
+#'
+#'
+
+plot_sankey_comparison = function(metadata,return_data=FALSE){
+
+  # optional use of packages:
+  if (!requireNamespace("networkD3", quietly = TRUE)) {
+    warning("The networkD3 package must be installed to use this functionality")
+    #Either exit or do something without rgl
+    return(NULL)
+  }
+  #
+
+  # TODO: add code!
+  # make edges == edge_list_chord and nodes
+
+  # p <- networkD3::sankeyNetwork(Links = edges, Nodes = nodes,
+  #                               Source = "IDsource", Target = "IDtarget",
+  #                               Value = "n", NodeID = "name",
+  #                               sinksRight=FALSE,fontSize=20)
+  # p
+
+  if(return_data){
+    return(list(nodes = nodes, edges = edges))
+  }
+
+}

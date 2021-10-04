@@ -2,9 +2,9 @@
 ### check_distance_neighbors
 ##########
 
-#' Estimate quality of mapped data
+#' Estimate quality of mapped data based on distances of query cells from reference cells
 #'
-#' Calculates a shared KNN to see how well query cells mix with reference cells and how the distances are.
+#' Calculates average distance to reference neighbors and normalized average distances based on average distances of these reference neighbors within the reference dataset.
 #'
 #' @inheritParams project_query
 #' @param reference_seurat reference seurat
@@ -15,9 +15,8 @@
 #' @param annoy.metric string passed to Seurat's FindNeighbors
 #'
 #' @return query_seurat_object with quality results in metadata
-#' median_dist_to_neighbors: what is the median distance of a query cell to all neighbor cells
-#' median_dist_refNeighbors: for all neighbor cells from the reference: what are their median distances
-#' normalized_nn_distance: median_dist_to_neighbors / median_dist_refNeighbors (how comparable are the query cells distances to their neighboring cell distances)
+#' nn_distance_reference: what is the median distance of a query cell to all neighbor cells in reference
+#' normalized_nn_distance: nn_distance_reference / median_dist_refNeighbors (how comparable are the query cells distances to their neighboring cell distances)
 #'
 #' @export
 #'
@@ -31,14 +30,15 @@ check_distance_neighbors = function(query_seurat_object,reference_seurat,reducti
   #TODO
 
   # add query boolean:
-  query_seurat_object@meta.data$query =TRUE
+  #query_seurat_object@meta.data$query =TRUE
 
   # query
   if(query_nn %in%  names(query_seurat_object@neighbors)){
     message("Found ",query_nn)
   }else{
-    query_seurat_object = Seurat::FindNeighbors(query_seurat_object,reduction =  reduction_name,k.param = k_param,graph.name = query_nn,annoy.metric = annoy.metric,
-                                        return.neighbor = TRUE,dims = 1:ncol(query_seurat_object@reductions[[reduction_name]]@cell.embeddings))
+    stop("Please provide a valid @neighbors object via the query_nn parameter that labels query neighbors in the reference.")
+    #query_seurat_object = Seurat::FindNeighbors(query_seurat_object,reduction =  reduction_name,k.param = k_param,graph.name = query_nn,annoy.metric = annoy.metric,
+    #                                    return.neighbor = TRUE,dims = 1:ncol(query_seurat_object@reductions[[reduction_name]]@cell.embeddings))
   }
   query_to_ref_idx = query_seurat_object@neighbors[[query_nn]]@nn.idx
   query_to_ref_dists = query_seurat_object@neighbors[[query_nn]]@nn.dist
@@ -53,6 +53,7 @@ check_distance_neighbors = function(query_seurat_object,reference_seurat,reducti
   ref_idx = reference_seurat@neighbors[[reference_nn]]@nn.idx
   ref_dists = reference_seurat@neighbors[[reference_nn]]@nn.dist
 
+  message("Calculating average distances ...")
   # get average distance to all neighbors of query cells
   query_dists = apply(query_to_ref_dists[which(query_seurat_object@meta.data$query),2:ncol(query_to_ref_dists)],1,median)
   query_dists = data.frame(Cell_ID = query_seurat_object@meta.data$Cell_ID[query_seurat_object@meta.data$query], median_dist_to_neighbors = query_dists)
@@ -65,8 +66,9 @@ check_distance_neighbors = function(query_seurat_object,reference_seurat,reducti
   query_neighbor_dists = data.frame(Cell_ID = query_seurat_object@meta.data$Cell_ID[query_seurat_object@meta.data$query], median_dist_refNeighbors = query_neighbor_dists)
 
   # compute normalized score
+  query_seurat_object@meta.data$nn_distance_reference = query_dists$median_dist_to_neighbors
   query_seurat_object@meta.data$normalized_nn_distance = query_dists$median_dist_to_neighbors / query_neighbor_dists$median_dist_refNeighbors
-  message("Adding result to metadata as: ","normalized_nn_distance")
+  message("Adding result to metadata as: ","nn_distance_reference, ","normalized_nn_distance")
 
   # return
   return(query_seurat_object)
@@ -77,16 +79,16 @@ check_distance_neighbors = function(query_seurat_object,reference_seurat,reducti
 ### check_freq_neighbors
 ##########
 
-#' Estimate quality of mapped data
+#' Estimate quality of mapped data based on neighborhood of query cells
 #'
-#' Calculates a shared KNN to see how well query cells mix with reference cells and how the distances are.
+#' Calculates a shared KNN to see how well query cells mix with reference cells. Depends on the number of query cells (many query cells will likely also lead to more query dataset neighbors)
 #'
 #' @inheritParams project_query
 #' @inheritParams check_distance_neighbors
 #' @param reference_seurat reference seurat
 #'
 #' @return query_seurat_object with quality results in metadata
-#' query_neighbor_pct: how many neighbors are from query dataset. Can either indicate that query contains many more cells than reference or that celltype is absent in reference.
+#' query_neighbor_pct: how many neighbors of a query cells come from query dataset. Can either indicate that query contains many more cells than reference or that celltype is absent in reference.
 #'
 #' @export
 #'
@@ -106,12 +108,14 @@ check_freq_neighbors = function(query_seurat_object,reference_seurat,reduction_n
   # set query variable to false
   merged_object@meta.data$query[is.na(merged_object@meta.data$query)] =FALSE
   # need to run FindNeighbors
+  message("Calculating shared neighbors ...")
   merged_object = Seurat::FindNeighbors(merged_object,reduction =  reduction_name,k.param = k_param,graph.name = "new_nn",annoy.metric = annoy.metric,
                                 return.neighbor = TRUE,dims = 1:ncol(merged_object@reductions[[reduction_name]]@cell.embeddings))
   nn_idx = merged_object@neighbors$new_nn@nn.idx
   nn_dist = merged_object@neighbors$new_nn@nn.dist
 
   # use nn_idx to get number of query neighbors for each query cells
+  message("Calculating neighbor frequencies ...")
   query_freq = apply(nn_idx[which(merged_object@meta.data$query),2:ncol(nn_idx)],1,function(row,query){
     freq_batch = sum(query[row]) / length(row)
   }, query = merged_object@meta.data$query)

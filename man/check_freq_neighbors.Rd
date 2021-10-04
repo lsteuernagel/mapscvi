@@ -2,7 +2,7 @@
 % Please edit documentation in R/quality_functions.R
 \name{check_freq_neighbors}
 \alias{check_freq_neighbors}
-\title{Estimate quality of mapped data}
+\title{Estimate quality of mapped data based on neighborhood of query cells}
 \usage{
 check_freq_neighbors(
   query_seurat_object,
@@ -28,8 +28,8 @@ check_freq_neighbors(
 }
 \value{
 query_seurat_object with quality results in metadata
-query_neighbor_pct: how many neighbors are from query dataset. Can either indicate that query contains many more cells than reference or that celltype is absent in reference.
+query_neighbor_pct: how many neighbors of a query cells come from query dataset. Can either indicate that query contains many more cells than reference or that celltype is absent in reference.
 }
 \description{
-Calculates a shared KNN to see how well query cells mix with reference cells and how the distances are.
+Calculates a shared KNN to see how well query cells mix with reference cells. Depends on the number of query cells (many query cells will likely also lead to more query dataset neighbors)
 }
