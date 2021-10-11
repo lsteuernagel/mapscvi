@@ -7,8 +7,14 @@
 plot_propagation_stats(
   query_seura_object,
   reference_seurat,
+  label_col_query,
   label_col,
-  label_col_query = "predicted",
+  ratio_cut = 2,
+  text_size = 10,
+  plot_abs = FALSE,
+  n_top = 10,
+  ref_col = "#eda09a",
+  query_col = "#9aa9ed",
   return_data = FALSE
 )
 }
@@ -17,14 +23,26 @@ plot_propagation_stats(
 
 \item{reference_seurat}{reference seurat object}
 
-\item{label_col}{the column name in reference_map metadata with labels to propagate}
-
 \item{label_col_query}{he column name in query_seura_object metadata with labels to propagate}
 
-\item{return_data}{return data and / or  plot}
+\item{label_col}{the column name in reference_map metadata with labels to propagate}
+
+\item{ratio_cut}{what ratio is considered to be a relevant difference (just for coloring)}
+
+\item{text_size}{text_size in ggplots}
+
+\item{plot_abs}{use absolute cell counts in barplot (might be option for large query data). defaults to FALSE}
+
+\item{n_top}{how many clusters to include in barplots}
+
+\item{ref_col}{color in plot}
+
+\item{query_col}{color in plot}
+
+\item{return_data}{return data or  plot. defaults to FALSE which means the plot will be printed}
 }
 \value{
-plot or data behind plot
+ggplot or data behind plot
 }
 \description{
 Determines over or und represented clusters

@@ -112,27 +112,97 @@ plot_query_labels = function(query_seura_object,reference_seurat,label_col,label
 #'
 #' @param query_seura_object query seurat object
 #' @param reference_seurat reference seurat object
-#' @param label_col the column name in reference_map metadata with labels to propagate
 #' @param label_col_query he column name in query_seura_object metadata with labels to propagate
-#' @param return_data return data and / or  plot
+#' @param label_col the column name in reference_map metadata with labels to propagate
+#' @param ratio_cut what ratio is considered to be a relevant difference (just for coloring)
+#' @param text_size text_size in ggplots
+#' @param plot_abs use absolute cell counts in barplot (might be option for large query data). defaults to FALSE
+#' @param n_top how many clusters to include in barplots
+#' @param ref_col color in plot
+#' @param query_col color in plot
+#' @param return_data return data or  plot. defaults to FALSE which means the plot will be printed
 #'
-#' @return plot or data behind plot
+#' @return ggplot or data behind plot
 #'
 #' @export
 #'
-#' @import SeuratObject Seurat cowplot ggplot2
+#' @import Seurat dplyr ggplot2 cowplot stringr
 #'
 #' @examples
 #'
 #'
 
-plot_propagation_stats = function(query_seura_object,reference_seurat,label_col,label_col_query = "predicted",return_data=FALSE){
+plot_propagation_stats = function(query_seura_object,reference_seurat,label_col_query,label_col,ratio_cut=2,text_size=10,plot_abs = FALSE,n_top = 10,ref_col = "#eda09a",query_col = "#9aa9ed",return_data=FALSE){
 
-  # TODO: add code!
+  # TODO: add checks ?
 
+  ## create counts per cluster (in ref and query)
+  query_count = query_seura_object@meta.data %>% dplyr::group_by(!!rlang::sym(label_col_query)) %>% dplyr::rename(group = !!rlang::sym(label_col_query)) %>% dplyr::count(name="query_count")
+  reference_count = reference_seurat@meta.data %>% dplyr::group_by(!!rlang::sym(label_col)) %>% dplyr::rename(group = !!rlang::sym(label_col))  %>% dplyr::count(name="reference_count")
+  # combine
+  count_both = dplyr::left_join(reference_count,query_count,by = c("group"="group"))
+  count_both$query_count[is.na(count_both$query_count)] = 0
+  # add some more stats
+  count_both = count_both %>% ungroup() %>% dplyr::mutate(reference_pct = round(reference_count / sum(reference_count),5)*100, query_pct = round(query_count / sum(query_count),5)*100) %>%
+    dplyr::mutate(relative_log2_ratio = log2(query_pct / reference_pct), absolute_log2_ratio = log2(query_count / reference_count))
+
+  # update dataframe with some general values
+  count_both$classification[count_both$relative_log2_ratio >= 0] = "query enriched"
+  count_both$classification[count_both$relative_log2_ratio < 0] = "query depleted"
+  count_both$relative_log2_ratio[is.infinite(count_both$relative_log2_ratio) & count_both$relative_log2_ratio> 0] = 10
+  count_both$relative_log2_ratio[is.infinite(count_both$relative_log2_ratio) & count_both$relative_log2_ratio< 0] = -10
+
+  # plot ratio distribution to show
+  maxscales = c(-1*max(abs(count_both$relative_log2_ratio)),max(abs(count_both$relative_log2_ratio)))
+  p_ratio = ggplot2::ggplot(count_both,aes(x =relative_log2_ratio,fill=classification)) +
+    # geom_rect(aes(xmin = -Inf, xmax = 0, ymin = -Inf, ymax = Inf),fill = ref_col, alpha = alpha_rect) +
+    # geom_rect(aes(xmin = 0, xmax = Inf, ymin = -Inf, ymax = Inf),fill = query_col, alpha = alpha_rect) +
+    geom_histogram(bins = 30)+#xlim(maxscales) +
+    geom_vline(xintercept = 0) + geom_vline(xintercept = log2(ratio_cut),color="black",linetype="dashed")  +
+    geom_vline(xintercept = -1*log2(ratio_cut),color="black",linetype="dashed")+
+    xlab("Log2-ratio of cluster pct in reference and query")+ylab("Number of clusters")+
+    theme(text = element_text(size=text_size),legend.title = element_blank(),legend.text = element_text(size = text_size/2)) +coord_flip()+scale_fill_manual(values = c("query depleted"=ref_col,"query enriched"=query_col))+
+    guides(fill = guide_legend(override.aes = list(size = 0.5)))+
+    ggtitle("Ratio of all clusters")
+  p_ratio
+
+  ## prepare barplots for clusters
+  if(plot_abs){
+    use_cols = c("reference_count","query_count")
+    ytitle = "Number of cells in cluster"
+    col_values = c("reference_count"=ref_col,"query_count"=query_col)
+  }else{
+    use_cols = c("reference_pct","query_pct")
+    ytitle = "Percentage of cells in cluster compared to all cells"
+    col_values = c("reference_pct"=ref_col,"query_pct"=query_col)
+  }
+
+  ## a barplot with topend different clusters (enriched in query)
+  query_enriched_clusters = count_both %>% dplyr::filter(relative_log2_ratio > log2(ratio_cut)) %>% dplyr::slice_max(order_by = relative_log2_ratio,n=n_top) %>%
+    tidyr::gather(key = "coltype","value",-group,-classification) #%>5 dplyr::mutate(value = as.numeric(value))
+  p1=ggplot(query_enriched_clusters %>% dplyr::filter(coltype %in% use_cols) %>% dplyr::mutate(group = stringr::str_wrap(group,width = 15)),aes(x=group,y=value,group=coltype,fill=coltype))+
+    geom_bar(stat="identity", position = "dodge")+coord_flip()+
+    ylab(ytitle)+xlab("Clusters")+
+    theme(text = element_text(size=text_size))+ guides(fill=guide_legend(title="Dataset"))+
+    scale_fill_manual(values = col_values)+
+    ggtitle("Top enriched clusters")
+
+  ## a barplot with topend different clusters (enriched in reference)
+  reference_enriched_clusters = count_both %>% dplyr::filter(relative_log2_ratio < -1*log2(ratio_cut) & relative_log2_ratio>-10) %>%
+    dplyr::slice_min(order_by = relative_log2_ratio,n=n_top)  %>%
+    tidyr::gather(key = "coltype","value",-group,-classification)
+  p2=ggplot(reference_enriched_clusters %>% dplyr::filter(coltype %in% use_cols) %>% dplyr::mutate(group = stringr::str_wrap(group,width = 15)),aes(x=group,y=value,group=coltype,fill=coltype))+
+    geom_bar(stat="identity", position = "dodge")+coord_flip()+
+    ylab(ytitle)+xlab("Clusters")+
+    theme(text = element_text(size=text_size))+ guides(fill=guide_legend(title="Dataset"))+
+    scale_fill_manual(values = col_values)+
+    ggtitle("Top depleted clusters")
 
   if(return_data){
-    return(propagation_stats)
+    return(count_both)
+  }else{
+    #legend_p <- cowplot::get_legend(p_ratio)
+    cowplot::plot_grid(p1+ guides(fill=FALSE),p2+ guides(fill=FALSE)+ylab(""),p_ratio,nrow=1)
   }
 }
 
