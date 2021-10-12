@@ -36,7 +36,7 @@ prepare_query = function(object,suffix="query",metadata =NULL,assay="RNA",subset
       }
     }
   } else if(length(intersect(base::class(object),c("SingleCellExperiment")))>0){
-    count_data= as(SingleCellExperiment::counts(object), "dgCMatrix")
+    count_data= methods::as(SingleCellExperiment::counts(object), "dgCMatrix")
     temp_metadata <- as.data.frame(SummarizedExperiment::colData(object))
     if(!is.null(metadata)){
       if(length(setdiff(rownames(metadata),colnames(count_data))) == 0){
@@ -47,7 +47,7 @@ prepare_query = function(object,suffix="query",metadata =NULL,assay="RNA",subset
     query_seurat_object = SeuratObject::CreateSeuratObject(counts = count_data,project = suffix,meta.data = temp_metadata)
   } else if(length(intersect(base::class(object),c("matrix","dgCMatrix","Matrix","data.frame")))>0){
     # base::class(object) %in% c("matrix","dgCMatrix","Matrix","data.frame")
-    count_data = as(object, "dgCMatrix")
+    count_data = methods::as(object, "dgCMatrix")
     temp_metadata = data.frame(Cell_ID = colnames(count_data), Sample_ID = paste0(suffix,"_sample_1"))
     rownames(temp_metadata) = temp_metadata$Cell_ID
     if(!is.null(metadata)){
@@ -188,7 +188,7 @@ prepare_query_hypoMap = function(object,suffix="query",covariates=c(batch_var = 
     rpl_signature = as.character(c("Rpl32", "Rpl26", "Rpl22l1", "Rps19", "Rpl39", "Rps9", "Rps15", "Rpl27a", "Rps25", "Rps20", "Rpl36al", "Rps8", "Rpl6", "Rps23", "Rpl19", "Cox7a2l", "Rpl7", "Rps26-ps1", "Rps27a", "Rps16", "Rpl29", "Rps3a1", "Rps4x", "Rps6", "Rpl17", "Rps18-ps3", "Rpl9-ps6", "Rps24", "Rps12-ps3", "Rps7", "Rpl21", "Rpl36-ps3", "Rpl13-ps3", "Rpl23a-ps3", "Rpl10a", "Rpl6l", "Rpl27-ps3", "Rpl7a-ps5", "Cox7c", "Jund", "Rpl10"))
     rpl_signature_expr_median = tryCatch({
       rpl_signature_expr = Seurat::FetchData(query_seurat_object,vars = rpl_signature)
-      rpl_signature_expr_median = apply(rpl_signature_expr,1,median,na.rm=TRUE)
+      rpl_signature_expr_median = apply(rpl_signature_expr,1,stats::median,na.rm=TRUE)
       rpl_signature_expr_median
     },
     error=function(cond) {

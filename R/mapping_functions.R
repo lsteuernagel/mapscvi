@@ -55,10 +55,16 @@ predict_query = function(query_seurat_object,model_path,query_reduction="scvi",m
 
   ### reticulate code section:
   if(use_reticulate){
+
+    if (!requireNamespace("reticulate", quietly = TRUE)) {
+      warning("The reticulate package must be installed to use this function when use_reticulate is set to TRUE.")
+      return(NULL)
+    }
+
     # I am following this guide: https://docs.scvi-tools.org/en/stable/user_guide/notebooks/scvi_in_R.html
-    pd <- import('pandas', convert = FALSE)
-    sc <- import('scanpy', convert = FALSE)
-    scvi <- import('scvi', convert = FALSE)
+    pd <- reticulate::import('pandas', convert = FALSE)
+    sc <- reticulate::import('scanpy', convert = FALSE)
+    scvi <- reticulate::import('scvi', convert = FALSE)
     #scvi$settings$progress_bar_style = 'tqdm'
 
     # make anndata in python
@@ -109,7 +115,7 @@ predict_query = function(query_seurat_object,model_path,query_reduction="scvi",m
     # system(paste0("python3 -u python/map_scvi.py ",updated_name," ",model_path," ",output_file," ",max_epochs))
     #system.file("inst/python/map_scvi.py",package = "mapscvi",lib.loc = "/beegfs/scratch/bruening_scratch/lsteuernagel/R/user_lib/x86_64-pc-linux-gnu-library/4.0/mapscvi/")
     # load results into R
-    scvi_prediction = read.table(output_file)
+    scvi_prediction = utils::read.table(output_file)
     scvi_prediction = as.matrix(scvi_prediction)
     colnames(scvi_prediction) = paste0("scVI_",1:ncol(scvi_prediction))
     rownames(scvi_prediction) = colnames(matrix_for_anndata)

@@ -126,7 +126,7 @@ plot_query_labels = function(query_seura_object,reference_seurat,label_col,label
 #'
 #' @export
 #'
-#' @import Seurat dplyr ggplot2 cowplot stringr
+#' @import Seurat dplyr tidyr ggplot2 cowplot stringr
 #'
 #' @examples
 #'
@@ -161,7 +161,7 @@ plot_propagation_stats = function(query_seura_object,reference_seurat,label_col_
     geom_vline(xintercept = 0) + geom_vline(xintercept = log2(ratio_cut),color="black",linetype="dashed")  +
     geom_vline(xintercept = -1*log2(ratio_cut),color="black",linetype="dashed")+
     xlab("Log2-ratio of cluster pct in reference and query")+ylab("Number of clusters")+
-    theme(text = element_text(size=text_size),legend.title = element_blank(),legend.text = element_text(size = text_size/2)) +coord_flip()+scale_fill_manual(values = c("query depleted"=ref_col,"query enriched"=query_col))+
+    theme(text = element_text(size=text_size),legend.title = element_blank(),legend.text = element_text(size = text_size)) +coord_flip()+scale_fill_manual(values = c("query depleted"=ref_col,"query enriched"=query_col))+
     guides(fill = guide_legend(override.aes = list(size = 0.5)))+
     ggtitle("Ratio of all clusters")
   p_ratio
@@ -178,7 +178,7 @@ plot_propagation_stats = function(query_seura_object,reference_seurat,label_col_
   }
 
   ## a barplot with topend different clusters (enriched in query)
-  query_enriched_clusters = count_both %>% dplyr::filter(relative_log2_ratio > log2(ratio_cut)) %>% dplyr::slice_max(order_by = relative_log2_ratio,n=n_top) %>%
+  query_enriched_clusters = count_both %>% dplyr::filter(relative_log2_ratio > log2(ratio_cut)) %>% dplyr::arrange(relative_log2_ratio) %>% dplyr::slice_max(order_by = relative_log2_ratio,n=n_top) %>%
     tidyr::gather(key = "coltype","value",-group,-classification) #%>5 dplyr::mutate(value = as.numeric(value))
   p1=ggplot(query_enriched_clusters %>% dplyr::filter(coltype %in% use_cols) %>% dplyr::mutate(group = stringr::str_wrap(group,width = 15)),aes(x=group,y=value,group=coltype,fill=coltype))+
     geom_bar(stat="identity", position = "dodge")+coord_flip()+
@@ -188,7 +188,7 @@ plot_propagation_stats = function(query_seura_object,reference_seurat,label_col_
     ggtitle("Top enriched clusters")
 
   ## a barplot with topend different clusters (enriched in reference)
-  reference_enriched_clusters = count_both %>% dplyr::filter(relative_log2_ratio < -1*log2(ratio_cut) & relative_log2_ratio>-10) %>%
+  reference_enriched_clusters = count_both %>% dplyr::filter(relative_log2_ratio < -1*log2(ratio_cut) & relative_log2_ratio>-10 )%>% dplyr::arrange(desc(relative_log2_ratio)) %>%
     dplyr::slice_min(order_by = relative_log2_ratio,n=n_top)  %>%
     tidyr::gather(key = "coltype","value",-group,-classification)
   p2=ggplot(reference_enriched_clusters %>% dplyr::filter(coltype %in% use_cols) %>% dplyr::mutate(group = stringr::str_wrap(group,width = 15)),aes(x=group,y=value,group=coltype,fill=coltype))+
@@ -207,6 +207,160 @@ plot_propagation_stats = function(query_seura_object,reference_seurat,label_col_
 }
 
 
+##########
+### compare_clustering
+##########
+
+#' Compare two clustering results
+#'
+#' For example between propagated and original clusters!
+#' TODO: add description
+#'
+#' @param query_seura_object query seurat object
+#' @param clustering_1 column name in query_seura_object metadata with cluster labels
+#' @param clustering_2 column name in query_seura_object metadata with cluster labels
+#' @param min_cells minimum shared cells to construct a relationship (edge) between two clusters from different clusterings
+#' @param min_pct min percentage to construct a relationship (edge) between two clusters from different clusterings
+#' @param return_data return data or  plot. defaults to FALSE which means the plot will be printed
+#'
+#' @return ggplot or data behind plot
+#'
+#' @export
+#'
+#' @import Seurat dplyr ggplot2 cowplot stringr igraph
+#'
+#' @examples
+#'
+#'
+
+# test
+# clustering_1 = "predicted_K169_named"
+# clustering_2 = "seurat_clusters"
+
+compare_clustering = function(query_seura_object,clustering_1,clustering_2,min_cells = 10,min_pct = 0.1,return_data=FALSE){
+
+  # group by cluster to make summary df
+  overview = query_seura_object@meta.data %>% dplyr::select(clustering_1 = !!rlang::sym(clustering_1),clustering_2 = !!rlang::sym(clustering_2)) %>%
+    dplyr::group_by(clustering_1) %>% dplyr::add_count(name = "clustering_1_total") %>%
+    dplyr::group_by(clustering_2) %>% dplyr::add_count(name = "clustering_2_total") %>%
+    dplyr::group_by(clustering_2,clustering_1) %>%
+    dplyr::add_count(name="n") %>% dplyr::distinct(clustering_2,clustering_1,.keep_all=TRUE) %>%
+    dplyr::mutate(pct_clustering_1 = n / clustering_1_total, pct_clustering_2 = n / clustering_2_total )
+
+  # make a weighted directed graph
+  overview_edges = overview %>%  dplyr::select(from = clustering_1, to = clustering_2, weight = pct_clustering_1,n)
+  overview_edges = rbind(overview_edges,overview %>% dplyr::select(from = clustering_2, to = clustering_1, weight = pct_clustering_2,n))
+  overview_edges =  overview_edges %>% dplyr::filter(n > min_cells, weight > min_pct)
+  overview_graph = igraph::graph_from_data_frame(overview_edges,directed = TRUE)
+  # find degree
+  node_degree = data.frame(node_id = names(degree(overview_graph, mode = "out")),
+                           out_degree = degree(overview_graph, mode = "out"),
+                           in_degree = degree(overview_graph, mode = "in"),
+                           component_id = components(overview_graph,mode="strong")$membership)
+
+  # add to overview
+  overview_relevant = overview %>% dplyr::filter(n > min_cells, pct_clustering_1 > min_pct | pct_clustering_2 > min_pct)
+  overview_relevant = dplyr::left_join(overview_relevant,node_degree, by=c("clustering_1"="node_id"))
+  overview_relevant = dplyr::left_join(overview_relevant,node_degree[,c("node_id","out_degree","in_degree" )], by=c("clustering_2"="node_id"),suffix = c("_1","_2"))
+
+  # need to find 1:n , m:1 ,m:n
+  clustering_1_flagged = overview_relevant %>% ungroup() %>% dplyr::filter(out_degree_1 > 1  & in_degree_1 > 1) %>%
+    dplyr::distinct(clustering_1,out_degree_1,in_degree_1) %>% dplyr::arrange(desc(out_degree_1),desc(in_degree_1))
+
+  clustering_2_flagged = overview_relevant %>% ungroup() %>% dplyr::filter(out_degree_2 > 1  & in_degree_2 > 1) %>%
+    dplyr::distinct(clustering_2,out_degree_2,in_degree_2) %>% dplyr::arrange(desc(out_degree_2),desc(in_degree_2))
+
+  both_flagged = overview_relevant %>% ungroup() %>% dplyr::filter(out_degree_1 > 1  & in_degree_1 > 1 & out_degree_2 > 1  & in_degree_2 > 1) %>%
+    dplyr::distinct(clustering_1,clustering_2,out_degree_1,in_degree_1,out_degree_2,in_degree_2) %>% dplyr::arrange(desc(out_degree_1),desc(in_degree_1),desc(out_degree_2),desc(in_degree_2))
+
+  # return in what form ?
+  if(return_data){
+    return(overview_relevant)
+  }else{
+    return(results_flagged = list(clustering_1_flagged = clustering_1_flagged,clustering_2_flagged=clustering_2_flagged,both_flagged=both_flagged))
+  }
+
+}
+
+##########
+### visNetwork_clustering
+##########
+
+#' Compare two clustering results with visNetwork
+#'
+#' For example between propagated and original clusters!
+#' TODO: add description
+#'
+#' @inheritParams compare_clustering
+#' @inheritParams plot_sankey_comparison
+#' @param px_height height of interactve visNetwork in pixles
+#' @param color_by defaults to NULL. if not NULL a input_clusters column name to color edges by
+#' @param palette = Rcolorbrewer palette name
+#'
+#'
+#' @return ggplot or data behind plot
+#'
+#' @export
+#'
+#' @import Seurat dplyr ggplot2 cowplot stringr
+#'
+#' @examples
+#'
+#'
+
+visNetwork_clustering = function(input_clusters,clustering_1,clustering_2,min_cells = 10,min_pct = 0.1,text_size=25,px_height="800px",col1="#cc2118",col2="#302ac9",color_by = NULL,palette = "Set3",return_data=FALSE){
+
+  # optional use of packages:
+  if (!requireNamespace("visNetwork", quietly = TRUE)) {
+    warning("The visNetwork package must be installed to use this function")
+    return(NULL)
+  }
+  if (!requireNamespace("RColorBrewer", quietly = TRUE)) {
+    warning("The visNetwork package must be installed to use this function")
+    return(NULL)
+  }
+
+  if(length(setdiff(c("clustering_1","clustering_2","pct_clustering_1","pct_clustering_2"),colnames(input_clusters)))>0){
+    stop("Cannot find all required column names in input_clusters: ",paste0(setdiff(c("clustering_1","clustering_2","pct_clustering_1","pct_clustering_2"),colnames(markers57)),collapse=" ; "))
+  }
+
+  # run
+  overview = compare_clustering(input_clusters,clustering_1,clustering_2,min_cells = 10,min_pct = 0.1,return_data=TRUE)
+  print(head(overview))
+
+  # make edgelist
+  if(is.null(color_by)){color_by=""}
+  overview_edges = overview %>%  dplyr::select(from = clustering_1, to = clustering_2, value = pct_clustering_1,n,group = !!rlang::sym(color_by))
+  overview_edges = rbind(overview_edges,overview %>% dplyr::select(from = clustering_2, to = clustering_1, value = pct_clustering_2,n,group = !!rlang::sym(color_by)))
+
+  ###plot network
+  edges_a = as.data.frame(overview_edges)
+  edges_a$arrows = "to"
+  if("group" %in% colnames(edges_a)){
+    # get palette
+    max_col_palette = RColorBrewer::brewer.pal.info[palette,"maxcolors"]
+    # creat color mapping df
+    col_mapping = data.frame(group_id = unique(edges_a$group))
+    col_mapping$color = rep(RColorBrewer::brewer.pal(max_col_palette, "Set3"),ceiling(nrow(col_mapping) / max_col_palette))[1:nrow(col_mapping)] # add idx
+    # add to edges
+    edges_a = edges_a %>% dplyr::left_join(col_mapping,by=c("group"="group_id"))
+  }else{
+    edges_a$color = "#878787"
+  }
+
+  #nodes
+  nodes_a = data.frame(id = unique(c(edges_a$from,edges_a$to)))
+  #nodes_a = edges_a %>% dplyr::distinct(from,group) %>% dplyr::select(id = from, group)
+  nodes_a$label = nodes_a$id
+  nodes_a$font.size = text_size
+  nodes_a$color = col1
+  nodes_a$color[nodes_a$id %in% overview$clustering_2] = col2
+
+  # render
+  visNetwork::visNetwork(nodes_a, edges_a, width = "100%",height = px_height) %>%
+    visNetwork::visIgraphLayout(randomSeed = 123,physics = FALSE) %>% visNetwork::visEdges(smooth = TRUE) #%>% visPhysics(stabilization = FALSE)
+
+}
 
 
 ##########
@@ -217,8 +371,14 @@ plot_propagation_stats = function(query_seura_object,reference_seurat,label_col_
 #'
 #' TODO: add description
 #'
-#' @param metadata TODO
-#' @param return_data
+#' @param input_clusters edgelist-like dataframe with first two clusters containing ids of clusters
+#' @param clustering_1_filter character vector, which clusters to filter on
+#' @param clustering_2_filter character vector, which clusters to filter on
+#' @param value_col string, column name that specifies values of connection size in sankey
+#' @param text_size numeric, font size in sankey
+#' @param col1 string, color name for clustering_1
+#' @param col2 string, color name for clustering_2
+#' @param return_data return list with nodes and edges instead of plotting sankey
 #'
 #' @return ggtree object or plot
 #'
@@ -229,28 +389,60 @@ plot_propagation_stats = function(query_seura_object,reference_seurat,label_col_
 #' @examples
 #'
 #'
+# input_clusters = overview_relevant
+# min_pct = 0.1
+# input_clusters = overview %>% dplyr::filter(pct_clustering_1 > min_pct | pct_clustering_2 > min_pct)
+# clustering_1_filter = "Slc32a1.Hmx2.Hmx3.Prok2.Th"
+# clustering_2_filter = c("57","15","24","29","34")
+#
+# clustering_1_filter = NULL
+# clustering_2_filter = c("40","32","0")
 
-plot_sankey_comparison = function(metadata,return_data=FALSE){
+plot_sankey_comparison = function(input_clusters,clustering_1_filter = NULL,clustering_2_filter = NULL,value_col="n",text_size=10,col1="#cc2118",col2="#302ac9",return_data=FALSE){
 
   # optional use of packages:
   if (!requireNamespace("networkD3", quietly = TRUE)) {
     warning("The networkD3 package must be installed to use this function")
-    #Either exit or do something without rgl
     return(NULL)
   }
-  #
+  # check that either filter is provided
+  if(is.null(clustering_1_filter) & is.null(clustering_2_filter)){
+    warning("Please provide a filter for one of the clusterings")
+    return(NULL)
+  }
+  if(colnames(input_clusters)[1] != "clustering_1" | colnames(input_clusters)[2] != "clustering_2"){
+    warning("Warning: The first two columns of input_clusters have to be named clustering_1 and clustering_1! Overwriting, but please ensure that they correspond to the cluster ids or names.")
+    #return(NULL)
+    colnames(input_clusters)[1:2] =c("clustering_1","clustering_2")
+  }
+  # make edges
+  if(!is.null(clustering_1_filter) & !is.null(clustering_2_filter)){
+    sankey_edges = input_clusters %>% dplyr::filter(clustering_1 %in% clustering_1_filter | clustering_2 %in% clustering_2_filter)
+  }else if(!is.null(clustering_1_filter)){
+    sankey_edges = input_clusters %>% dplyr::filter(clustering_1 %in% clustering_1_filter)
+  }else{
+    sankey_edges = input_clusters %>% dplyr::filter(clustering_2 %in% clustering_2_filter)
+  }
+  # nodes
+  sankey_nodes <- data.frame(name=c(as.character(sankey_edges$clustering_1),as.character(sankey_edges$clustering_2)) %>% unique())
+  sankey_nodes$group = "clustering_1"
+  sankey_nodes$group[sankey_nodes$name %in% input_clusters$clustering_2] = "clustering_2"
+  sankey_edges = as.data.frame(sankey_edges)
+  # With networkD3, connection must be provided using id, not using real name like in the links dataframe.. So we need to reformat it.
+  sankey_edges$IDsource <- match(sankey_edges$clustering_1, sankey_nodes$name)-1
+  sankey_edges$IDtarget <- match(sankey_edges$clustering_2, sankey_nodes$name)-1
 
-  # TODO: add code!
-  # make edges == edge_list_chord and nodes
-
-  # p <- networkD3::sankeyNetwork(Links = edges, Nodes = nodes,
-  #                               Source = "IDsource", Target = "IDtarget",
-  #                               Value = "n", NodeID = "name",
-  #                               sinksRight=FALSE,fontSize=20)
-  # p
-
+  # return
   if(return_data){
-    return(list(nodes = nodes, edges = edges))
+    return(list(nodes = sankey_nodes, edges = sankey_edges))
+  }else{
+    #plot
+    p <- networkD3::sankeyNetwork(Links = sankey_edges, Nodes = sankey_nodes,
+                                  Source = "IDsource", Target = "IDtarget",
+                                  Value = value_col, NodeID = "name",NodeGroup = "group",
+                                  colourScale = networkD3::JS(paste0('d3.scaleOrdinal() .domain(["clustering_1","clustering_2"]) .range(["',col1,'","',col2,'"]);')),
+                                  sinksRight=FALSE,fontSize=text_size)
+    p
   }
 
 }

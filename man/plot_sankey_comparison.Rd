@@ -4,12 +4,33 @@
 \alias{plot_sankey_comparison}
 \title{Plot comparison between reference and query using sankey plots}
 \usage{
-plot_sankey_comparison(metadata, return_data = FALSE)
+plot_sankey_comparison(
+  input_clusters,
+  clustering_1_filter = NULL,
+  clustering_2_filter = NULL,
+  value_col = "n",
+  text_size = 10,
+  col1 = "#cc2118",
+  col2 = "#302ac9",
+  return_data = FALSE
+)
 }
 \arguments{
-\item{metadata}{TODO}
+\item{input_clusters}{edgelist-like dataframe with first two clusters containing ids of clusters}
 
-\item{return_data}{}
+\item{clustering_1_filter}{character vector, which clusters to filter on}
+
+\item{clustering_2_filter}{character vector, which clusters to filter on}
+
+\item{value_col}{string, column name that specifies values of connection size in sankey}
+
+\item{text_size}{numeric, font size in sankey}
+
+\item{col1}{string, color name for clustering_1}
+
+\item{col2}{string, color name for clustering_2}
+
+\item{return_data}{return list with nodes and edges instead of plotting sankey}
 }
 \value{
 ggtree object or plot
