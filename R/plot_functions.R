@@ -15,6 +15,7 @@
 #' @param label_col the column name in reference_map metadata with labels to propagate
 #' @param label_col_query he column name in query_seura_object metadata with labels to propagate
 #' @param overlay overlay query onto label
+#' @param bg_col if non null, the reference will take this color and the query ill be overlayed colored by label_col_query. This will ignore overlay_color and overlay_alpha
 #' @param overlay_color color of overlay points
 #' @param overlay_alpha = alpha for overlay plot
 #' @param query_pt_size numeric for pt size of query cells. defaults to NULL which will inherit the pt.size from the reference DimPlot
@@ -35,7 +36,7 @@
 #'
 #'
 
-plot_query_labels = function(query_seura_object,reference_seurat,label_col,label_col_query = "predicted", overlay = FALSE, overlay_color = "red", overlay_alpha = 0.2,query_pt_size=NULL, query_umap = "umap_scvi",reference_umap="umap_scvi",labelonplot=TRUE,noaxes=TRUE,nolegend=TRUE,...){
+plot_query_labels = function(query_seura_object,reference_seurat,label_col,label_col_query = "predicted", overlay = FALSE, bg_col = "grey80", overlay_color = "red", overlay_alpha = 0.5,query_pt_size=NULL, query_umap = "umap_scvi",reference_umap="umap_scvi",labelonplot=TRUE,noaxes=TRUE,nolegend=TRUE,...){
 
   # check
   if(is.null(reference_seurat)){stop("Please provide reference seurat with latent space, umap and metadata")}
@@ -49,15 +50,20 @@ plot_query_labels = function(query_seura_object,reference_seurat,label_col,label
     plot_data = cbind(query_seura_object@reductions[[query_umap]]@cell.embeddings,query_seura_object@meta.data)
     # plot reference UMAP
     p_full=DimPlot(reference_seurat,group.by = label_col,reduction = reference_umap,label = labelonplot,...)
-    if(noaxes){p_full = p_full+Seurat::NoAxes()}
-    if(nolegend){ p_full = p_full+Seurat::NoLegend()}
-    # adjust alpha
-    p_full[[1]]$layers[[1]]$aes_params$alpha = min(overlay_alpha,1)
     # save and remove geom_text layer
     if(labelonplot){
       save_geom_text = p_full$layers[[2]]
       p_full$layers[[2]] =NULL
     }
+    # recreate plot if all points are bg col
+    if(!is.null(bg_col)){
+      reference_seurat$dummy = NA
+      p_full=DimPlot(reference_seurat,group.by = "dummy")+scale_color_manual(values = bg_col,na.value=bg_col)+NoLegend()
+    }
+    if(noaxes){p_full = p_full+Seurat::NoAxes()}
+    if(nolegend){ p_full = p_full+Seurat::NoLegend()}
+    # adjust alpha
+    p_full[[1]]$layers[[1]]$aes_params$alpha = min(overlay_alpha,1)
     # get pt size
     if(is.null(query_pt_size)){
       pt_size = p_full[[1]]$layers[[1]]$aes_params$size
@@ -65,7 +71,26 @@ plot_query_labels = function(query_seura_object,reference_seurat,label_col,label
       pt_size = query_pt_size
     }
     # plot query points on top
-    p_full=p_full+ggplot2::geom_point(data=plot_data,ggplot2::aes_string(x=colnames(plot_data)[1],y=colnames(plot_data)[2]),size=pt_size,color=overlay_color)
+    if(!is.null(bg_col)){
+      # if bg color is set we are plotting the color with the query points
+      # do the label_col and label_col query overlap ? then use color scale from reference
+      if(length(intersect(unique(query_seura_object@meta.data[,label_col_query]),unique(reference_seurat@meta.data[,label_col])))>0){
+        test_plot = DimPlot(reference_seurat,group.by = label_col,reduction = reference_umap) # testplot from full data
+        testplot_build=ggplot_build(test_plot)$data[1][[1]] # dataframe with colors
+        color_mapping_df=as.data.frame(cbind(testplot_build[,"colour"],reference_seurat@meta.data[,c(label_col)])) %>% dplyr::distinct(V1,V2) # make a df with label_col and colours
+        color_mapping <- as.character(color_mapping_df$V1) # convert to a named vector for scale_color_manual
+        names(color_mapping) <- color_mapping_df$V2
+        # add points to plot
+        p_full=p_full+ggplot2::geom_point(data=plot_data,ggplot2::aes_string(x=colnames(plot_data)[1],y=colnames(plot_data)[2],color=label_col_query),size=pt_size)+
+          scale_color_manual(values = color_mapping,na.value= bg_col)
+      }else{# if not use default mapping
+        p_full=p_full+ggplot2::geom_point(data=plot_data,ggplot2::aes_string(x=colnames(plot_data)[1],y=colnames(plot_data)[2],color=label_col_query),size=pt_size)
+      }
+      p_full = p_full+ggtitle(label_col_query)
+    }else{
+      # if no bg color use overlay color instead
+      p_full=p_full+ggplot2::geom_point(data=plot_data,ggplot2::aes_string(x=colnames(plot_data)[1],y=colnames(plot_data)[2]),size=pt_size,color=overlay_color)
+    }
     # add geom_labels back
     if(labelonplot){p_full$layers[[3]] = save_geom_text}
   }else{

@@ -10,6 +10,7 @@ plot_query_labels(
   label_col,
   label_col_query = "predicted",
   overlay = FALSE,
+  bg_col = "grey80",
   overlay_color = "red",
   overlay_alpha = 0.2,
   query_pt_size = NULL,
@@ -31,6 +32,8 @@ plot_query_labels(
 \item{label_col_query}{he column name in query_seura_object metadata with labels to propagate}
 
 \item{overlay}{overlay query onto label}
+
+\item{bg_col}{if non null, the reference will take this color and the query ill be overlayed colored by label_col_query. This will ignore overlay_color and overlay_alpha}
 
 \item{overlay_color}{color of overlay points}
 

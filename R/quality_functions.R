@@ -334,11 +334,11 @@ propagate_labels_prob = function(query_seurat_object,reference_seurat_object,lab
 }
 
 
-query_snseq_neurons = propagate_labels_prob(query_seurat_object = query_snseq_neurons,
-                                            reference_seurat_object = neuron_map_seurat,
-                                            label_col = "K329_pruned",k.param = 30,add_to_seurat = TRUE,add_entropy = TRUE)
-query_snseq_neurons$prediction_entropy = 1 - query_snseq_neurons$prediction_entropy
-DimPlot(query_snseq_neurons,group.by = "predicted",reduction = "umap_scvi")+NoLegend()+NoAxes()
-FeaturePlot(query_snseq_neurons,features = "prediction_probability")
-FeaturePlot(query_snseq_neurons,features = "prediction_entropy")
+# query_snseq_neurons = propagate_labels_prob(query_seurat_object = query_snseq_neurons,
+#                                             reference_seurat_object = neuron_map_seurat,
+#                                             label_col = "K329_pruned",k.param = 30,add_to_seurat = TRUE,add_entropy = TRUE)
+# query_snseq_neurons$prediction_entropy = 1 - query_snseq_neurons$prediction_entropy
+# DimPlot(query_snseq_neurons,group.by = "predicted",reduction = "umap_scvi")+NoLegend()+NoAxes()
+# FeaturePlot(query_snseq_neurons,features = "prediction_probability")
+# FeaturePlot(query_snseq_neurons,features = "prediction_entropy")
 
