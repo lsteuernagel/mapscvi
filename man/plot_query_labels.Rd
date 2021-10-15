@@ -12,7 +12,7 @@ plot_query_labels(
   overlay = FALSE,
   bg_col = "grey80",
   overlay_color = "red",
-  overlay_alpha = 0.2,
+  overlay_alpha = 0.5,
   query_pt_size = NULL,
   query_umap = "umap_scvi",
   reference_umap = "umap_scvi",

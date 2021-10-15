@@ -2,6 +2,7 @@
 
 export(add_paired_annotation)
 export(adjusted_cell_probabilities)
+export(avg_neighbor_distances)
 export(check_distance_neighbors)
 export(check_freq_neighbors)
 export(check_reference_markers_per_cell)

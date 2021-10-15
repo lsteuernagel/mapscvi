@@ -10,18 +10,39 @@ propagate_labels_prob(
   label_col,
   reduction_name_query = "scvi",
   reduction_name_reference = "scvi",
+  neighbors_object = NULL,
+  annoy.metric = "cosine",
   k.param = 30,
+  apply_gaussian = FALSE,
   add_entropy = FALSE,
   add_to_seurat = TRUE
 )
 }
 \arguments{
-\item{reference_seurat_object}{v}
+\item{query_seurat_object}{seurat with query data (and a reduction that is projected from reference_seurat_object) to find shared neighbors}
 
-\item{add_to_seurat}{}
+\item{reference_seurat_object}{seurat to map onto}
+
+\item{label_col}{column name with labels in reference_seurat_object}
+
+\item{reduction_name_query}{name of reduction in query}
+
+\item{reduction_name_reference}{name of reduction in reference}
+
+\item{neighbors_object}{if NULL will run neighbor detection between query_seurat_object and reference_seurat_object}
+
+\item{annoy.metric}{euclidean or cosine}
+
+\item{k.param}{k param for neighbor finding}
+
+\item{apply_gaussian}{Apply gaussian kernel to smooth distances .only use when distance = euclidean ! (or a neighbors_object based on euclidean distances is provided)}
+
+\item{add_entropy}{re-run to calculate entropy as uncertainty measure}
+
+\item{add_to_seurat}{add to query_seurat_object or return dataframe}
 }
 \value{
-object
+seuratobject or dataframe with label propagation results and qc
 }
 \description{
 Cell probabilities similar to scARches algorithm

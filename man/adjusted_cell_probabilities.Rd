@@ -4,7 +4,12 @@
 \alias{adjusted_cell_probabilities}
 \title{Estimate quality of mapped data based on marker genes from reference}
 \usage{
-adjusted_cell_probabilities(dist_Nc, labels_of_neighbor, result_type = "all")
+adjusted_cell_probabilities(
+  dist_Nc,
+  labels_of_neighbor,
+  apply_gaussian = TRUE,
+  result_type = "all"
+)
 }
 \arguments{
 \item{dist_Nc}{vector of length k with euclidean distances to neigbors}
