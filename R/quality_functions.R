@@ -109,7 +109,7 @@ avg_neighbor_distances = function(neighbors_object=NULL,reference_map_reduc,quer
 
   # calculate all pairwise differences of neighbors in reference:
   message("Calculating average distances ...")
-  mean_between_distance_reference = apply(query_to_ref_idx,1,function(idx_of_neighbor,reference_map_reduc,method =distance.metric){
+  mean_between_distance_reference = apply(query_to_ref_idx,1,function(idx_of_neighbor,latent_space,method =distance.metric){
     if(method == "cosine"){
       #Convert to cosine dissimilarity matrix (distance matrix).
       #https://stats.stackexchange.com/questions/31565/compute-a-cosine-dissimilarity-matrix-in-r
@@ -119,14 +119,14 @@ avg_neighbor_distances = function(neighbors_object=NULL,reference_map_reduc,quer
         dissim <- 1 - sim
         return(dissim)
       }
-      distances_of_ref_neighbors = fast_cosine(base::as.matrix(reference_map_reduc[idx_of_neighbor,]))
+      distances_of_ref_neighbors = fast_cosine(base::as.matrix(latent_space[idx_of_neighbor,]))
     }else{
       # use R dist for distances: e.g euclidean
-      distances_of_ref_neighbors = base::as.matrix(stats::dist( reference_map_reduc[idx_of_neighbor,],method = method))
+      distances_of_ref_neighbors = base::as.matrix(stats::dist( latent_space[idx_of_neighbor,],method = method))
     }
     # get mean and return
     base::mean(distances_of_ref_neighbors[base::upper.tri(distances_of_ref_neighbors)])
-  },reference_map_reduc=reference_map_reduc)
+  },latent_space=reference_map_reduc@cell.embeddings)
   # return
   if(add_to_seurat & !is.null(query_seurat_object)){
     query_seurat_object@meta.data$avg_neighbor_distance = mean_between_distance_reference

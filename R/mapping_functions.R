@@ -232,7 +232,7 @@ project_query = function(query_seurat_object,reference_map_reduc,reference_map_u
     query_seurat_object = avg_neighbor_distances(query_seurat_object = query_seurat_object,
                                                  reference_map_reduc = reference_map_reduc, # reference_map_reduc
                                                  query_nn = "query_ref_nn",
-                                                 distance.metric="cosine",
+                                                 distance.metric=annoy.metric,
                                                  add_to_seurat=TRUE)
   }
 

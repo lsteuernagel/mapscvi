@@ -333,7 +333,7 @@ compare_clustering = function(query_seura_object,clustering_1,clustering_2,min_c
 #'
 #'
 
-visNetwork_clustering = function(input_clusters,clustering_1,clustering_2,min_cells = 10,min_pct = 0.1,text_size=25,px_height="800px",col1="#cc2118",col2="#302ac9",color_by = NULL,palette = "Set3",return_data=FALSE){
+visNetwork_clustering = function(query_seura_object,clustering_1,clustering_2,min_cells = 10,min_pct = 0.1,text_size=25,px_height="800px",col1="#cc2118",col2="#302ac9",color_by = NULL,palette = "Set3",return_data=FALSE){
 
   # optional use of packages:
   if (!requireNamespace("visNetwork", quietly = TRUE)) {
@@ -345,12 +345,12 @@ visNetwork_clustering = function(input_clusters,clustering_1,clustering_2,min_ce
     return(NULL)
   }
 
-  if(length(setdiff(c("clustering_1","clustering_2","pct_clustering_1","pct_clustering_2"),colnames(input_clusters)))>0){
-    stop("Cannot find all required column names in input_clusters: ",paste0(setdiff(c("clustering_1","clustering_2","pct_clustering_1","pct_clustering_2"),colnames(markers57)),collapse=" ; "))
-  }
+  # if(length(setdiff(c("clustering_1","clustering_2","pct_clustering_1","pct_clustering_2"),colnames(query_seura_object)))>0){
+  #   stop("Cannot find all required column names in query_seura_object: ",paste0(setdiff(c("clustering_1","clustering_2","pct_clustering_1","pct_clustering_2"),colnames(query_seura_object)),collapse=" ; "))
+  # }
 
   # run
-  overview = compare_clustering(input_clusters,clustering_1,clustering_2,min_cells = 10,min_pct = 0.1,return_data=TRUE)
+  overview = compare_clustering(query_seura_object,clustering_1,clustering_2,min_cells = 10,min_pct = 0.1,return_data=TRUE)
   print(head(overview))
 
   # make edgelist
