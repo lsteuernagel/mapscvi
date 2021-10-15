@@ -221,16 +221,21 @@ project_query = function(query_seurat_object,reference_map_reduc,reference_map_u
   # propagate labels
   if(!is.null(label_vec)){
     message(Sys.time(),": Predict labels..." )
-    labels <- tryCatch({
-      propagate_labels(nn_idx=query_seurat_object@neighbors[["query_ref_nn"]]@nn.idx,label_vec=label_vec)
-    },
-    error=function(cond) {
-      message("Cannot propagate labels. Returning NA. Error:",cond)
-      return(NA)
-    })
+    # run label propagation
+    query_seurat_object =propagate_labels_prob(neighbors_object=query_seurat_object@neighbors[["query_ref_nn"]],
+                                               query_seurat_object = query_seurat_object,
+                                               label_vec = label_vec,
+                                               apply_gaussian =FALSE,
+                                               add_entropy =TRUE,
+                                               add_to_seurat =TRUE)
+    # additionally run neighbor distances qc
+    query_seurat_object = avg_neighbor_distances(query_seurat_object = query_seurat_object,
+                                                 reference_map_reduc = reference_map_reduc, # reference_map_reduc
+                                                 query_nn = "query_ref_nn",
+                                                 distance.metric="cosine",
+                                                 add_to_seurat=TRUE)
   }
-  # add to seurat
-  query_seurat_object@meta.data[,paste0("predicted")] = labels
+
   #return
   return(query_seurat_object)
 }

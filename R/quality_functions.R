@@ -267,23 +267,23 @@ adjusted_cell_probabilities = function(dist_Nc,labels_of_neighbor,apply_gaussian
 #' Cell probabilities similar to scARches algorithm
 #' This function runs per cell
 #'
-#' @param query_seurat_object seurat with query data (and a reduction that is projected from reference_seurat_object) to find shared neighbors
-#' @param reference_seurat_object seurat to map onto
-#' @param label_col column name with labels in reference_seurat_object
-#' @param reduction_name_query name of reduction in query
-#' @param reduction_name_reference name of reduction in reference
-#' @param neighbors_object if NULL will run neighbor detection between query_seurat_object and reference_seurat_object
-#' @param annoy.metric euclidean or cosine
-#' @param k.param k param for neighbor finding
+#' @param neighbors_object neighbors-object with reference neighbors of query. If NULL will run neighbor detection between query_seurat_object and reference_seurat_object
+#' @param label_vec vector with labels
+#' @param query_seurat_object seurat with query data (and a reduction that is projected from reference_seurat_object) to find shared neighbors. NULL by default (not used when neighbors_object is provided)
+#' @param reference_seurat_object seurat to map onto. NULL by default (not used when neighbors_object is provided)
+#' @param reduction_name_query name of reduction in query (not used when neighbors_object is provided)
+#' @param reduction_name_reference name of reduction in reference (not used when neighbors_object is provided)
+#' @param annoy.metric euclidean or cosine (not used when neighbors_object is provided)
+#' @param k.param k param for neighbor finding (not used when neighbors_object is provided)
 #' @param apply_gaussian Apply gaussian kernel to smooth distances .only use when distance = euclidean ! (or a neighbors_object based on euclidean distances is provided)
 #' @param add_entropy re-run to calculate entropy as uncertainty measure
-#' @param add_to_seurat add to query_seurat_object or return dataframe
+#' @param add_to_seurat add to query_seurat_object or return dataframe, requires query_seurat_object to be provided
 #'
 #' @return seuratobject or dataframe with label propagation results and qc
 #'
 #' @export
 
-propagate_labels_prob = function(query_seurat_object,reference_seurat_object,label_col,reduction_name_query="scvi",reduction_name_reference="scvi",neighbors_object=NULL,annoy.metric="cosine",k.param=30, apply_gaussian =FALSE, add_entropy =FALSE, add_to_seurat =TRUE){
+propagate_labels_prob = function(neighbors_object=NULL,label_vec,query_seurat_object=NULL,reference_seurat_object=NULL,reduction_name_query="scvi",reduction_name_reference="scvi",annoy.metric="cosine",k.param=30, apply_gaussian =FALSE, add_entropy =FALSE, add_to_seurat =FALSE){
 
   # need euclidean distances neighbors
   if(is.null(neighbors_object)){
@@ -292,9 +292,6 @@ propagate_labels_prob = function(query_seurat_object,reference_seurat_object,lab
                                              k.param = k.param, return.neighbor =TRUE,
                                              annoy.metric=annoy.metric)
   }
-
-  # define label vector
-  all_labels = reference_seurat_object@meta.data[,label_col]
 
   # apply max prob per cell function
   if(apply_gaussian & annoy.metric=="cosine"){message("Warning: Applying gaussian filter after using cosine distance.")}
@@ -305,7 +302,7 @@ propagate_labels_prob = function(query_seurat_object,reference_seurat_object,lab
     label_of_neighbor = labels[neighbor_idxs[x,]]
     prob = adjusted_cell_probabilities(dist_Nc = dist_Nc,labels_of_neighbor = label_of_neighbor,apply_gaussian = apply_gaussian,result_type = "label")
     prob
-  },distances = neighbors_object@nn.dist,neighbor_idxs = neighbors_object@nn.idx,labels = all_labels)
+  },distances = neighbors_object@nn.dist,neighbor_idxs = neighbors_object@nn.idx,labels = label_vec)
 
   # mapping results
   mapping_results = data.frame(Cell_ID = neighbors_object@cell.names[1:n], predicted = names(max_probabilities), prediction_probability = as.numeric(max_probabilities))
@@ -319,10 +316,10 @@ propagate_labels_prob = function(query_seurat_object,reference_seurat_object,lab
       label_of_neighbor = labels[neighbor_idxs[x,]]
       prob = adjusted_cell_probabilities(dist_Nc = dist_Nc,labels_of_neighbor = label_of_neighbor,result_type = "entropy")
       prob
-    },distances = neighbors_object@nn.dist,neighbor_idxs = neighbors_object@nn.idx,labels = all_labels)
+    },distances = neighbors_object@nn.dist,neighbor_idxs = neighbors_object@nn.idx,labels = label_vec)
   }
   # return
-  if(add_to_seurat){
+  if(add_to_seurat & !is.null(query_seurat_object)){
     # remove if existing for clean join
     keep_names = colnames(query_seurat_object@meta.data)[!colnames(query_seurat_object@meta.data) %in% c("predicted","prediction_probability","prediction_entropy")]
     query_seurat_object@meta.data = query_seurat_object@meta.data[,keep_names]
@@ -354,12 +351,12 @@ propagate_labels_prob = function(query_seurat_object,reference_seurat_object,lab
 #'
 #' Calculates average distance between reference neighbors.
 #'
-#' @param query_seurat_object query seurat
-#' @param reference_seurat reference seurat
-#' @param reduction_name name of (scvi) reduction in reference.
-#' @param query_nn character vector with name of nn object in query (that conatins neighbor indices in reference)
+#' @param neighbors_object neighbors_object. if NULL tries to find it in query_seurat_object
+#' @param reference_map_reduc latent space from reference with same order as idx in `neighbors_object@nn.idx`
+#' @param query_seurat_object query seurat. defaults to NULL
+#' @param query_nn character vector with name of nn object in query (that contains neighbor indices in reference). only used when neighbors_object is NULL
 #' @param distance.metric distance metric, 'cosine' or any available for stats::dist like 'euclidean'
-#' @param add_to_seurat add result to query seurat object ? defualts to TRUE
+#' @param add_to_seurat add result to query seurat object ? requires query_seurat_object to be  defaults to FALSE
 #'
 #' @return query_seurat_object with 'avg_neighbor_distance' in meta.data or vector
 #'
@@ -369,22 +366,24 @@ propagate_labels_prob = function(query_seurat_object,reference_seurat_object,lab
 #'
 #' @examples
 
-avg_neighbor_distances = function(query_seurat_object,reference_seurat,reduction_name="scvi",query_nn = "query_ref_nn",distance.metric="cosine",add_to_seurat=TRUE){
+avg_neighbor_distances = function(neighbors_object=NULL,reference_map_reduc,query_seurat_object=NULL,query_nn = "query_ref_nn",distance.metric="cosine",add_to_seurat=TRUE){
 
+  # get neighbors_object from query seurat if necessary
+  if(is.null(neighbors_object)){
   if(query_nn %in%  names(query_seurat_object@neighbors)){
     message("Found ",query_nn)
+    neighbors_object = query_seurat_object@neighbors[[query_nn]]
   }else{
-    stop("Please provide a valid @neighbors object via the query_nn parameter that labels query neighbors in the reference.")
-    #query_seurat_object = Seurat::FindNeighbors(query_seurat_object,reduction =  reduction_name,k.param = k_param,graph.name = query_nn,annoy.metric = annoy.metric,
-    #                                    return.neighbor = TRUE,dims = 1:ncol(query_seurat_object@reductions[[reduction_name]]@cell.embeddings))
+    stop("Please provide a valid @neighbors object via the query_nn parameter that labels query neighbors in the reference. Or directly via the neighbors_object parameter")
   }
-  query_to_ref_idx = query_seurat_object@neighbors[[query_nn]]@nn.idx
-  query_to_ref_dists = query_seurat_object@neighbors[[query_nn]]@nn.dist
-  latent_space = reference_seurat@reductions[[reduction_name]]@cell.embeddings
+  }
+  # extract nn.idx
+  query_to_ref_idx = neighbors_object@nn.idx
+  query_to_ref_dists = neighbors_object@nn.dist
 
   # calculate all pairwise differences of neighbors in reference:
   message("Calculating average distances ...")
-  mean_between_distance_reference = apply(query_to_ref_idx,1,function(idx_of_neighbor,latent_space,method =distance.metric){
+  mean_between_distance_reference = apply(query_to_ref_idx,1,function(idx_of_neighbor,reference_map_reduc,method =distance.metric){
     if(method == "cosine"){
       #Convert to cosine dissimilarity matrix (distance matrix).
       #https://stats.stackexchange.com/questions/31565/compute-a-cosine-dissimilarity-matrix-in-r
@@ -394,16 +393,16 @@ avg_neighbor_distances = function(query_seurat_object,reference_seurat,reduction
         dissim <- 1 - sim
         return(dissim)
       }
-      distances_of_ref_neighbors = fast_cosine(base::as.matrix(latent_space[idx_of_neighbor,]))
+      distances_of_ref_neighbors = fast_cosine(base::as.matrix(reference_map_reduc[idx_of_neighbor,]))
     }else{
       # use R dist for distances: e.g euclidean
-      distances_of_ref_neighbors = base::as.matrix(stats::dist( latent_space[idx_of_neighbor,],method = method))
+      distances_of_ref_neighbors = base::as.matrix(stats::dist( reference_map_reduc[idx_of_neighbor,],method = method))
     }
     # get mean and return
     base::mean(distances_of_ref_neighbors[base::upper.tri(distances_of_ref_neighbors)])
-  },latent_space=latent_space)
+  },reference_map_reduc=reference_map_reduc)
   # return
-  if(add_to_seurat){
+  if(add_to_seurat & !is.null(query_seurat_object)){
     query_seurat_object@meta.data$avg_neighbor_distance = mean_between_distance_reference
     return(query_seurat_object)
   }else{

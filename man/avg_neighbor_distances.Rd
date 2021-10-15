@@ -5,26 +5,26 @@
 \title{Estimate quality of mapped data based on distances of between reference cells}
 \usage{
 avg_neighbor_distances(
-  query_seurat_object,
-  reference_seurat,
-  reduction_name = "scvi",
+  neighbors_object = NULL,
+  reference_map_reduc,
+  query_seurat_object = NULL,
   query_nn = "query_ref_nn",
   distance.metric = "cosine",
   add_to_seurat = TRUE
 )
 }
 \arguments{
-\item{query_seurat_object}{query seurat}
+\item{neighbors_object}{neighbors_object. if NULL tries to find it in query_seurat_object}
 
-\item{reference_seurat}{reference seurat}
+\item{reference_map_reduc}{latent space from reference with same order as idx in \code{neighbors_object@nn.idx}}
 
-\item{reduction_name}{name of (scvi) reduction in reference.}
+\item{query_seurat_object}{query seurat. defaults to NULL}
 
-\item{query_nn}{character vector with name of nn object in query (that conatins neighbor indices in reference)}
+\item{query_nn}{character vector with name of nn object in query (that contains neighbor indices in reference). only used when neighbors_object is NULL}
 
 \item{distance.metric}{distance metric, 'cosine' or any available for stats::dist like 'euclidean'}
 
-\item{add_to_seurat}{add result to query seurat object ? defualts to TRUE}
+\item{add_to_seurat}{add result to query seurat object ? requires query_seurat_object to be  defaults to FALSE}
 }
 \value{
 query_seurat_object with 'avg_neighbor_distance' in meta.data or vector
