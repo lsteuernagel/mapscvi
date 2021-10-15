@@ -1,3 +1,150 @@
+
+##########
+### check_reference_markers_per_cell
+##########
+
+#' Estimate quality of mapped data based on marker genes from reference
+#'
+#' Check marker gene expression in query cells based on predicted clusters and markers from reference.
+#'
+#' @inheritParams project_query
+#' @inheritParams check_distance_neighbors
+#' @param marker_genes a named list of character vectors with (marker) gene names and names corresponding to values in query_label_col
+#' @param query_label_col string, column-name in metadata of query_seurat_object. values of have to correspond to names of marker_genes
+#' @param min_expr min expression to be considered expressed (defaults to 0)
+#'
+#' @return query_seurat_object with quality results in metadata
+#' marker_pct: how many markers of projected reference cluster are expressed in each cell
+#'
+#' @export
+#'
+#' @import SeuratObject Seurat dplyr Matrix
+#'
+#' @examples
+
+check_reference_markers_per_cell = function(query_seurat_object,marker_genes,assay="RNA",query_label_col="predicted",min_expr=0,global_seed=12345){
+
+  # check input arguments
+  if(!query_label_col %in% colnames(query_seurat_object@meta.data)){
+    stop("Error: Cannot find '",query_label_col,"' in query_seurat_object@meta.data. Stopping.")
+  }else{
+    all_labels = unique(query_seurat_object@meta.data[,query_label_col])
+  }
+
+  if(length(setdiff(all_labels,names(marker_genes)))>0){
+    stop("Warning: Some labels are not part of marker_genes list (cannot find in list names!)")
+  }
+  # run pct of expressed markers per cell
+  res_marker_freq_list = sapply(all_labels,function(label,all_labels,count_matrix,marker_genes){
+    label_idx = which(all_labels == label)
+    label_genes = marker_genes[[label]]
+    if(length(label_genes)>1){
+      subset_matrix = count_matrix[rownames(count_matrix) %in% label_genes,label_idx]
+      subset_matrix[subset_matrix>min_expr] = 1
+      if(length(label_idx)>1){
+        freq_df = data.frame(Cell_ID = colnames(subset_matrix), marker_pct = Matrix::colSums(subset_matrix) / length(label_genes))
+      }else if(length(label_idx)==1){
+        freq_df = data.frame(Cell_ID = colnames(count_matrix)[label_idx], marker_pct = sum(subset_matrix) / length(label_genes))
+      }else{
+        freq_df =NULL
+      }
+    }else{
+      freq_df =NULL
+    }
+    freq_df
+  },all_labels=query_seurat_object@meta.data[,query_label_col],count_matrix=query_seurat_object@assays[[assay]]@data,marker_genes=marker_genes,simplify = FALSE)
+  res_marker_freq = do.call(rbind,res_marker_freq_list)
+
+  ## add to metadata
+  if("marker_pct" %in% colnames(query_seurat_object@meta.data)){
+    query_seurat_object@meta.data = query_seurat_object@meta.data %>% dplyr::select(-marker_pct)
+    rownames(query_seurat_object@meta.data) = query_seurat_object@meta.data$Cell_ID
+  }
+  query_seurat_object@meta.data = dplyr::left_join(query_seurat_object@meta.data,res_marker_freq,by="Cell_ID")
+  rownames(query_seurat_object@meta.data) = query_seurat_object@meta.data$Cell_ID
+  message("Adding result to metadata as: ","marker_pct")
+
+  return(query_seurat_object)
+
+}
+
+
+##########
+### avg_neighbor_distances
+##########
+
+#' Estimate quality of mapped data based on distances of between reference cells
+#'
+#' Calculates average distance between reference neighbors.
+#'
+#' @param neighbors_object neighbors_object. if NULL tries to find it in query_seurat_object
+#' @param reference_map_reduc latent space from reference with same order as idx in `neighbors_object@nn.idx`
+#' @param query_seurat_object query seurat. defaults to NULL
+#' @param query_nn character vector with name of nn object in query (that contains neighbor indices in reference). only used when neighbors_object is NULL
+#' @param distance.metric distance metric, 'cosine' or any available for stats::dist like 'euclidean'
+#' @param add_to_seurat add result to query seurat object ? requires query_seurat_object to be  defaults to FALSE
+#'
+#' @return query_seurat_object with 'avg_neighbor_distance' in meta.data or vector
+#'
+#' @export
+#'
+#' @import SeuratObject Seurat dplyr
+#'
+#' @examples
+
+avg_neighbor_distances = function(neighbors_object=NULL,reference_map_reduc,query_seurat_object=NULL,query_nn = "query_ref_nn",distance.metric="cosine",add_to_seurat=TRUE){
+
+  # get neighbors_object from query seurat if necessary
+  if(is.null(neighbors_object)){
+  if(query_nn %in%  names(query_seurat_object@neighbors)){
+    message("Found ",query_nn)
+    neighbors_object = query_seurat_object@neighbors[[query_nn]]
+  }else{
+    stop("Please provide a valid @neighbors object via the query_nn parameter that labels query neighbors in the reference. Or directly via the neighbors_object parameter")
+  }
+  }
+  # extract nn.idx
+  query_to_ref_idx = neighbors_object@nn.idx
+  query_to_ref_dists = neighbors_object@nn.dist
+
+  # calculate all pairwise differences of neighbors in reference:
+  message("Calculating average distances ...")
+  mean_between_distance_reference = apply(query_to_ref_idx,1,function(idx_of_neighbor,reference_map_reduc,method =distance.metric){
+    if(method == "cosine"){
+      #Convert to cosine dissimilarity matrix (distance matrix).
+      #https://stats.stackexchange.com/questions/31565/compute-a-cosine-dissimilarity-matrix-in-r
+      fast_cosine = function(mat){
+        sim <- mat / sqrt(rowSums(mat * mat)) # normalize by sum of each row (vector)
+        sim <- sim %*% t(sim) #
+        dissim <- 1 - sim
+        return(dissim)
+      }
+      distances_of_ref_neighbors = fast_cosine(base::as.matrix(reference_map_reduc[idx_of_neighbor,]))
+    }else{
+      # use R dist for distances: e.g euclidean
+      distances_of_ref_neighbors = base::as.matrix(stats::dist( reference_map_reduc[idx_of_neighbor,],method = method))
+    }
+    # get mean and return
+    base::mean(distances_of_ref_neighbors[base::upper.tri(distances_of_ref_neighbors)])
+  },reference_map_reduc=reference_map_reduc)
+  # return
+  if(add_to_seurat & !is.null(query_seurat_object)){
+    query_seurat_object@meta.data$avg_neighbor_distance = mean_between_distance_reference
+    return(query_seurat_object)
+  }else{
+    return(mapping_results)
+
+  }
+}
+
+
+
+
+#####################
+### Older: might remove !?
+
+
+
 ##########
 ### check_distance_neighbors
 ##########
@@ -128,285 +275,3 @@ check_freq_neighbors = function(query_seurat_object,reference_seurat,reduction_n
 
 }
 
-##########
-### check_reference_markers_per_cell
-##########
-
-#' Estimate quality of mapped data based on marker genes from reference
-#'
-#' Check marker gene expression in query cells based on predicted clusters and markers from reference.
-#'
-#' @inheritParams project_query
-#' @inheritParams check_distance_neighbors
-#' @param marker_genes a named list of character vectors with (marker) gene names and names corresponding to values in query_label_col
-#' @param query_label_col string, column-name in metadata of query_seurat_object. values of have to correspond to names of marker_genes
-#' @param min_expr min expression to be considered expressed (defaults to 0)
-#'
-#' @return query_seurat_object with quality results in metadata
-#' marker_pct: how many markers of projected reference cluster are expressed in each cell
-#'
-#' @export
-#'
-#' @import SeuratObject Seurat dplyr Matrix
-#'
-#' @examples
-
-check_reference_markers_per_cell = function(query_seurat_object,marker_genes,assay="RNA",query_label_col="predicted",min_expr=0,global_seed=12345){
-
-  # check input arguments
-  if(!query_label_col %in% colnames(query_seurat_object@meta.data)){
-    stop("Error: Cannot find '",query_label_col,"' in query_seurat_object@meta.data. Stopping.")
-  }else{
-    all_labels = unique(query_seurat_object@meta.data[,query_label_col])
-  }
-
-  if(length(setdiff(all_labels,names(marker_genes)))>0){
-    stop("Warning: Some labels are not part of marker_genes list (cannot find in list names!)")
-  }
-  # run pct of expressed markers per cell
-  res_marker_freq_list = sapply(all_labels,function(label,all_labels,count_matrix,marker_genes){
-    label_idx = which(all_labels == label)
-    label_genes = marker_genes[[label]]
-    if(length(label_genes)>1){
-      subset_matrix = count_matrix[rownames(count_matrix) %in% label_genes,label_idx]
-      subset_matrix[subset_matrix>min_expr] = 1
-      if(length(label_idx)>1){
-        freq_df = data.frame(Cell_ID = colnames(subset_matrix), marker_pct = Matrix::colSums(subset_matrix) / length(label_genes))
-      }else if(length(label_idx)==1){
-        freq_df = data.frame(Cell_ID = colnames(count_matrix)[label_idx], marker_pct = sum(subset_matrix) / length(label_genes))
-      }else{
-        freq_df =NULL
-      }
-    }else{
-      freq_df =NULL
-    }
-    freq_df
-  },all_labels=query_seurat_object@meta.data[,query_label_col],count_matrix=query_seurat_object@assays[[assay]]@data,marker_genes=marker_genes,simplify = FALSE)
-  res_marker_freq = do.call(rbind,res_marker_freq_list)
-
-  ## add to metadata
-  if("marker_pct" %in% colnames(query_seurat_object@meta.data)){
-    query_seurat_object@meta.data = query_seurat_object@meta.data %>% dplyr::select(-marker_pct)
-    rownames(query_seurat_object@meta.data) = query_seurat_object@meta.data$Cell_ID
-  }
-  query_seurat_object@meta.data = dplyr::left_join(query_seurat_object@meta.data,res_marker_freq,by="Cell_ID")
-  rownames(query_seurat_object@meta.data) = query_seurat_object@meta.data$Cell_ID
-  message("Adding result to metadata as: ","marker_pct")
-
-  return(query_seurat_object)
-
-}
-
-
-##########
-### adjusted_cell_probabilities
-##########
-
-#' Estimate quality of mapped data based on marker genes from reference
-#'
-#' Cell probabilities similar to scARches algorithm
-#' This function runs per cell
-#'
-#' @param dist_Nc vector of length k with euclidean distances to neigbors
-#' @param label_of_neighbor vector of length k with labels of neighbors
-#' @param result_type return type: "all","label","entropy"
-#'
-#' @return label probability depending on result_type
-#'
-#' @export
-
-adjusted_cell_probabilities = function(dist_Nc,labels_of_neighbor,apply_gaussian = TRUE,result_type="all"){
-
-  # step 1: Distances and input
-  # ... input of function
-  local_labels = unique(labels_of_neighbor)
-  k = length(labels_of_neighbor)
-  # apply gaussian ?
-  if(apply_gaussian){
-    # step 2: compute the standard deviation of the nearest distances
-    sd_nc = sqrt(sum(dist_Nc^2) / k )
-    # step 3: apply Gaussian kernel to distances
-    d_app = exp(-1*(dist_Nc/(2/sd_nc)^2) )
-  }else{
-    d_app = dist_Nc
-  }
-  # step 4: we computed the probability of assigning each label y to the query cell c by normalizing across all adjusted distances
-  label_probabilities = tapply(d_app,INDEX = labels_of_neighbor,FUN = sum) / sum(d_app)
-  # return result
-  if(result_type == "all"){
-    return(label_probabilities)
-    # or summarise further before returning:
-  }else{
-    if(result_type == "label"){
-      # step 5: uncertainty score: 1 - prob_label --> I rather return directly the highest label with its name
-      return(label_probabilities[label_probabilities == max(label_probabilities)])
-    }else if(result_type == "entropy"){
-      # step 6: try out entropy:
-      ## entropy helper:
-      entropy_fun = function(x,logfun ="log2"){
-        log_vec = do.call(logfun,list(x))
-        log_vec[is.infinite(log_vec)] = 0
-        log_vec[is.nan(log_vec)] = 0
-        return(-sum(x * log_vec))
-      }
-      entropy_uncertainty = entropy_fun(label_probabilities) / max(1,log2(length(local_labels)))
-      return(entropy_uncertainty)
-    }else{
-      return(NA)
-    }
-  }
-
-}
-
-##########
-### propagate_labels_prob
-##########
-
-#' Estimate quality of mapped data based on marker genes from reference
-#'
-#' Cell probabilities similar to scARches algorithm
-#' This function runs per cell
-#'
-#' @param neighbors_object neighbors-object with reference neighbors of query. If NULL will run neighbor detection between query_seurat_object and reference_seurat_object
-#' @param label_vec vector with labels
-#' @param query_seurat_object seurat with query data (and a reduction that is projected from reference_seurat_object) to find shared neighbors. NULL by default (not used when neighbors_object is provided)
-#' @param reference_seurat_object seurat to map onto. NULL by default (not used when neighbors_object is provided)
-#' @param reduction_name_query name of reduction in query (not used when neighbors_object is provided)
-#' @param reduction_name_reference name of reduction in reference (not used when neighbors_object is provided)
-#' @param annoy.metric euclidean or cosine (not used when neighbors_object is provided)
-#' @param k.param k param for neighbor finding (not used when neighbors_object is provided)
-#' @param apply_gaussian Apply gaussian kernel to smooth distances .only use when distance = euclidean ! (or a neighbors_object based on euclidean distances is provided)
-#' @param add_entropy re-run to calculate entropy as uncertainty measure
-#' @param add_to_seurat add to query_seurat_object or return dataframe, requires query_seurat_object to be provided
-#'
-#' @return seuratobject or dataframe with label propagation results and qc
-#'
-#' @export
-
-propagate_labels_prob = function(neighbors_object=NULL,label_vec,query_seurat_object=NULL,reference_seurat_object=NULL,reduction_name_query="scvi",reduction_name_reference="scvi",annoy.metric="cosine",k.param=30, apply_gaussian =FALSE, add_entropy =FALSE, add_to_seurat =FALSE){
-
-  # need euclidean distances neighbors
-  if(is.null(neighbors_object)){
-    neighbors_object = Seurat::FindNeighbors(reference_seurat_object@reductions[[reduction_name_reference]]@cell.embeddings,
-                                             query = query_seurat_object@reductions[[reduction_name_query]]@cell.embeddings,
-                                             k.param = k.param, return.neighbor =TRUE,
-                                             annoy.metric=annoy.metric)
-  }
-
-  # apply max prob per cell function
-  if(apply_gaussian & annoy.metric=="cosine"){message("Warning: Applying gaussian filter after using cosine distance.")}
-  message("Estimate probabilities")
-  n=nrow(neighbors_object@nn.dist)
-  max_probabilities = sapply(1:n,function(x,distances,neighbor_idxs,labels){
-    dist_Nc = distances[x,]
-    label_of_neighbor = labels[neighbor_idxs[x,]]
-    prob = adjusted_cell_probabilities(dist_Nc = dist_Nc,labels_of_neighbor = label_of_neighbor,apply_gaussian = apply_gaussian,result_type = "label")
-    prob
-  },distances = neighbors_object@nn.dist,neighbor_idxs = neighbors_object@nn.idx,labels = label_vec)
-
-  # mapping results
-  mapping_results = data.frame(Cell_ID = neighbors_object@cell.names[1:n], predicted = names(max_probabilities), prediction_probability = as.numeric(max_probabilities))
-
-  # not super efficient because I apply the function twice ....
-  if(add_entropy){
-    message("Estimate entropy")
-    # apply max prob per cell function
-    mapping_results$prediction_entropy = sapply(1:n,function(x,distances,neighbor_idxs,labels){
-      dist_Nc = distances[x,]
-      label_of_neighbor = labels[neighbor_idxs[x,]]
-      prob = adjusted_cell_probabilities(dist_Nc = dist_Nc,labels_of_neighbor = label_of_neighbor,result_type = "entropy")
-      prob
-    },distances = neighbors_object@nn.dist,neighbor_idxs = neighbors_object@nn.idx,labels = label_vec)
-  }
-  # return
-  if(add_to_seurat & !is.null(query_seurat_object)){
-    # remove if existing for clean join
-    keep_names = colnames(query_seurat_object@meta.data)[!colnames(query_seurat_object@meta.data) %in% c("predicted","prediction_probability","prediction_entropy")]
-    query_seurat_object@meta.data = query_seurat_object@meta.data[,keep_names]
-    # join
-    query_seurat_object@meta.data = dplyr::left_join(query_seurat_object@meta.data, mapping_results, by = c("Cell_ID"="Cell_ID"))
-    # set rownames of dataframe after dplyr
-    rownames(query_seurat_object@meta.data) = query_seurat_object@meta.data$Cell_ID
-    return(query_seurat_object)
-  }else{
-    return(mapping_results)
-  }
-}
-
-
-# query_snseq_neurons = propagate_labels_prob(query_seurat_object = query_snseq_neurons,
-#                                             reference_seurat_object = neuron_map_seurat,
-#                                             label_col = "K329_pruned",k.param = 30,add_to_seurat = TRUE,add_entropy = TRUE)
-# query_snseq_neurons$prediction_entropy = 1 - query_snseq_neurons$prediction_entropy
-# DimPlot(query_snseq_neurons,group.by = "predicted",reduction = "umap_scvi")+NoLegend()+NoAxes()
-# FeaturePlot(query_snseq_neurons,features = "prediction_probability")
-# FeaturePlot(query_snseq_neurons,features = "prediction_entropy")
-
-
-##########
-### avg_neighbor_distances
-##########
-
-#' Estimate quality of mapped data based on distances of between reference cells
-#'
-#' Calculates average distance between reference neighbors.
-#'
-#' @param neighbors_object neighbors_object. if NULL tries to find it in query_seurat_object
-#' @param reference_map_reduc latent space from reference with same order as idx in `neighbors_object@nn.idx`
-#' @param query_seurat_object query seurat. defaults to NULL
-#' @param query_nn character vector with name of nn object in query (that contains neighbor indices in reference). only used when neighbors_object is NULL
-#' @param distance.metric distance metric, 'cosine' or any available for stats::dist like 'euclidean'
-#' @param add_to_seurat add result to query seurat object ? requires query_seurat_object to be  defaults to FALSE
-#'
-#' @return query_seurat_object with 'avg_neighbor_distance' in meta.data or vector
-#'
-#' @export
-#'
-#' @import SeuratObject Seurat dplyr
-#'
-#' @examples
-
-avg_neighbor_distances = function(neighbors_object=NULL,reference_map_reduc,query_seurat_object=NULL,query_nn = "query_ref_nn",distance.metric="cosine",add_to_seurat=TRUE){
-
-  # get neighbors_object from query seurat if necessary
-  if(is.null(neighbors_object)){
-  if(query_nn %in%  names(query_seurat_object@neighbors)){
-    message("Found ",query_nn)
-    neighbors_object = query_seurat_object@neighbors[[query_nn]]
-  }else{
-    stop("Please provide a valid @neighbors object via the query_nn parameter that labels query neighbors in the reference. Or directly via the neighbors_object parameter")
-  }
-  }
-  # extract nn.idx
-  query_to_ref_idx = neighbors_object@nn.idx
-  query_to_ref_dists = neighbors_object@nn.dist
-
-  # calculate all pairwise differences of neighbors in reference:
-  message("Calculating average distances ...")
-  mean_between_distance_reference = apply(query_to_ref_idx,1,function(idx_of_neighbor,reference_map_reduc,method =distance.metric){
-    if(method == "cosine"){
-      #Convert to cosine dissimilarity matrix (distance matrix).
-      #https://stats.stackexchange.com/questions/31565/compute-a-cosine-dissimilarity-matrix-in-r
-      fast_cosine = function(mat){
-        sim <- mat / sqrt(rowSums(mat * mat)) # normalize by sum of each row (vector)
-        sim <- sim %*% t(sim) #
-        dissim <- 1 - sim
-        return(dissim)
-      }
-      distances_of_ref_neighbors = fast_cosine(base::as.matrix(reference_map_reduc[idx_of_neighbor,]))
-    }else{
-      # use R dist for distances: e.g euclidean
-      distances_of_ref_neighbors = base::as.matrix(stats::dist( reference_map_reduc[idx_of_neighbor,],method = method))
-    }
-    # get mean and return
-    base::mean(distances_of_ref_neighbors[base::upper.tri(distances_of_ref_neighbors)])
-  },reference_map_reduc=reference_map_reduc)
-  # return
-  if(add_to_seurat & !is.null(query_seurat_object)){
-    query_seurat_object@meta.data$avg_neighbor_distance = mean_between_distance_reference
-    return(query_seurat_object)
-  }else{
-    return(mapping_results)
-
-  }
-}
