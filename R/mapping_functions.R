@@ -17,7 +17,6 @@
 #' @param max_epochs epochs to train
 #' @param assay assay name for new prediction and where to find raw counts. defaults to RNA
 #' @param use_reticulate if TRUE: tries to call scvi via reticulate, if FALSE: exports an anndata object to a temp file and then calls a python script to run prediction code using system()
-#' @param temp_dir directory for temporary files if use_reticulate == FALSE
 #' @param global_seed seed
 #'
 #' @return query_seurat_object: Updated seurat object with predicted latent space as reduction.
@@ -30,7 +29,7 @@
 
 # TODO: need to limit cores used by scvi ! (run setup !)
 
-predict_query = function(query_seurat_object,model_path,query_reduction="scvi",max_epochs = 30,assay="RNA",use_reticulate = FALSE,temp_dir = "/beegfs/scratch/bruening_scratch/lsteuernagel/data/tmp_mapscvi/",global_seed=12345){
+predict_query = function(query_seurat_object,model_path,query_reduction="scvi",max_epochs = 30,assay="RNA",use_reticulate = FALSE,global_seed=12345){
 
   # load the variable feature from modelpath
   var_features = utils::read.table(paste0(model_path,"var_names.csv"),header = F)$V1
@@ -97,8 +96,8 @@ predict_query = function(query_seurat_object,model_path,query_reduction="scvi",m
 
   }else{ # this version does not use reticulate to execute scvi
 
-    # make path if not existing
-    system(paste0("mkdir -p ",temp_dir))
+    # tempfiles - should be the same across the session
+    temp_dir = tempdir()
 
     # make Seurat from updated matrix
     temp_seurat = SeuratObject::CreateSeuratObject(counts = matrix_for_anndata, meta.data = query_seurat_object@meta.data, project = query_seurat_object@project.name)
@@ -401,7 +400,7 @@ propagate_labels_prob = function(neighbors_object=NULL,label_vec,query_seurat_ob
 #' @examples
 
 map_new_seurat_hypoMap = function(query_seurat_object,suffix="query",assay="RNA",subset_col="",label_col="",subset_values=NULL,max_epochs,reference_seurat=NULL,reference_reduction="scvi",model_path = "/beegfs/scratch/bruening_scratch/lsteuernagel/data/scHarmonize/hypothalamusMapNeurons_v4/harmonization_results/hypothalamus_neurons_reference/hypothalamus_neurons_reference_model/",
-                                  use_reticulate = FALSE,temp_dir = "/beegfs/scratch/bruening_scratch/lsteuernagel/data/tmp_mapscvi/",global_seed=12345){
+                                  use_reticulate = FALSE,global_seed=12345){
 
   # prepare
   query_seurat_object = prepare_query_hypoMap(query_seurat_object,suffix=suffix,assay=assay,subset_col=subset_col,subset_values=subset_values,normalize=TRUE,
