@@ -5,7 +5,7 @@
 \title{Compare two clustering results with visNetwork}
 \usage{
 visNetwork_clustering(
-  input_clusters,
+  query_seura_object,
   clustering_1,
   clustering_2,
   min_cells = 10,
@@ -20,7 +20,7 @@ visNetwork_clustering(
 )
 }
 \arguments{
-\item{input_clusters}{edgelist-like dataframe with first two clusters containing ids of clusters}
+\item{query_seura_object}{query seurat object}
 
 \item{clustering_1}{column name in query_seura_object metadata with cluster labels}
 
