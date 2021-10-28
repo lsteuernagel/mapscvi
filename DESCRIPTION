@@ -5,8 +5,10 @@ Authors@R:
     person("Lukas", "Steuernagel", email = "jane@example.com", role = c("aut", "cre"))
 Description: Map single cell expression data in a seurat object into reference scvi latent space and reference umap based on seurat.
 License: MIT + file LICENSE
-Imports: rlang, dplyr, tidyr, Matrix, Seurat, SeuratObject, SeuratDisk, ggplot2, cowplot, SingleCellExperiment, SummarizedExperiment, stringr
-Suggests: networkD3, ggtree
+Imports: rlang, dplyr, tidyr, Matrix, Seurat, SeuratObject, ggplot2, cowplot, SingleCellExperiment, SummarizedExperiment, stringr
+Remotes:
+  mojaveazure/seurat-disk
+Suggests: networkD3
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
