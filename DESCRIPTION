@@ -1,13 +1,11 @@
 Package: mapscvi
 Title: Map single cell expression data into reference
 Version: 0.0.1
-Authors@R:
-    person("Lukas", "Steuernagel", email = "jane@example.com", role = c("aut", "cre"))
+Authors@R: person("Lukas", "Steuernagel", email = "l@example.com", role = c("aut", "cre"))
 Description: Map single cell expression data in a seurat object into reference scvi latent space and reference umap based on seurat.
 License: MIT + file LICENSE
 Imports: rlang, dplyr, tidyr, Matrix, Seurat, SeuratObject, ggplot2, cowplot, SingleCellExperiment, SummarizedExperiment, stringr
-Remotes:
-  mojaveazure/seurat-disk
+Remotes: mojaveazure/seurat-disk
 Suggests: networkD3
 Encoding: UTF-8
 LazyData: true
