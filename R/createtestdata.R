@@ -64,6 +64,7 @@
 # model_path = "/beegfs/scratch/bruening_scratch/lsteuernagel/data/hypoMap/hypoMap_models/scVI_hypothalamus_full_map_model/"
 # system(paste0("cp -r ",model_path," /beegfs/scratch/bruening_scratch/lsteuernagel/projects/mapscvi/inst/extdata/models/"))
 #
+
 # #####
 # ## load example data
 # #####
