@@ -7,3 +7,6 @@ inst/extdata/models/ filter=lfs diff=lfs merge=lfs -text
 inst/extdata/models/hypothalamus_neurons_reference_model/attr.pkl filter=lfs diff=lfs merge=lfs -text
 inst/extdata/models/hypothalamus_neurons_reference_model/model_params.pt filter=lfs diff=lfs merge=lfs -text
 inst/extdata/models/hypothalamus_neurons_reference_model/var_names.csv filter=lfs diff=lfs merge=lfs -text
+inst/extdata/models/scVI_hypothalamus_full_map_model/attr.pkl filter=lfs diff=lfs merge=lfs -text
+inst/extdata/models/scVI_hypothalamus_full_map_model/model_params.pt filter=lfs diff=lfs merge=lfs -text
+inst/extdata/models/scVI_hypothalamus_full_map_model/var_names.csv filter=lfs diff=lfs merge=lfs -text
