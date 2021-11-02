@@ -11,7 +11,6 @@ predict_query(
   max_epochs = 30,
   assay = "RNA",
   use_reticulate = FALSE,
-  temp_dir = "/beegfs/scratch/bruening_scratch/lsteuernagel/data/tmp_mapscvi/",
   global_seed = 12345
 )
 }
@@ -27,8 +26,6 @@ predict_query(
 \item{assay}{assay name for new prediction and where to find raw counts. defaults to RNA}
 
 \item{use_reticulate}{if TRUE: tries to call scvi via reticulate, if FALSE: exports an anndata object to a temp file and then calls a python script to run prediction code using system()}
-
-\item{temp_dir}{directory for temporary files if use_reticulate == FALSE}
 
 \item{global_seed}{seed}
 }

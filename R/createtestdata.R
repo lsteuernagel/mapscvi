@@ -100,7 +100,7 @@
 # ##save(sce_lamanno_da,file = "/beegfs/scratch/bruening_scratch/lsteuernagel/projects/mapscvi/data/sce_lamanno_da.RData")
 #
 # #save testdata
-# save(query_romanov,file = "/beegfs/scratch/bruening_scratch/lsteuernagel/projects/mapscvi/data/query_romanov_object.RData")
+# save(query_romanov,file = "/beegfs/scratch/bruening_scratch/lsteuernagel/projects/mapscvi/data/query_romanov.RData")
 # save(sce_lamanno_da,file = "/beegfs/scratch/bruening_scratch/lsteuernagel/projects/mapscvi/data/sce_lamanno_da.RData")
 #
 # #####

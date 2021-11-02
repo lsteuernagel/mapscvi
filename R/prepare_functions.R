@@ -20,7 +20,7 @@
 #'
 #' @export
 #'
-#' @import Seurat SeuratObject rlang dplyr SingleCellExperiment SummarizedExperiment
+#' @import Seurat SeuratObject rlang dplyr
 #'
 #' @examples
 
@@ -36,6 +36,15 @@ prepare_query = function(object,suffix="query",metadata =NULL,assay="RNA",subset
       }
     }
   } else if(length(intersect(base::class(object),c("SingleCellExperiment")))>0){
+    # optional use of packages:
+    if (!requireNamespace("SummarizedExperiment", quietly = TRUE)) {
+      warning("The SummarizedExperiment package must be installed to use this function with an object of type SingleCellExperiment.")
+      return(NULL)
+    }
+    if (!requireNamespace("SingleCellExperiment", quietly = TRUE)) {
+      warning("The SingleCellExperiment package must be installed to use this function with an object of type SingleCellExperiment.")
+      return(NULL)
+    }
     count_data= methods::as(SingleCellExperiment::counts(object), "dgCMatrix")
     temp_metadata <- as.data.frame(SummarizedExperiment::colData(object))
     if(!is.null(metadata)){

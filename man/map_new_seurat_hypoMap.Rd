@@ -17,7 +17,6 @@ map_new_seurat_hypoMap(
  
     model_path = "/beegfs/scratch/bruening_scratch/lsteuernagel/data/scHarmonize/hypothalamusMapNeurons_v4/harmonization_results/hypothalamus_neurons_reference/hypothalamus_neurons_reference_model/",
   use_reticulate = FALSE,
-  temp_dir = "/beegfs/scratch/bruening_scratch/lsteuernagel/data/tmp_mapscvi/",
   global_seed = 12345
 )
 }
@@ -43,8 +42,6 @@ map_new_seurat_hypoMap(
 \item{model_path}{path to pretrained scvi model}
 
 \item{use_reticulate}{if TRUE: tries to call scvi via reticulate, if FALSE: exports an anndata object to a temp file and then calls a python script to run prediction code using system()}
-
-\item{temp_dir}{directory for temporary files if use_reticulate == FALSE}
 
 \item{global_seed}{seed}
 }

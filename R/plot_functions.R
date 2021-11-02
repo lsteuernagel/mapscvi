@@ -151,7 +151,9 @@ plot_query_labels = function(query_seura_object,reference_seurat,label_col,label
 #'
 #' @export
 #'
-#' @import Seurat dplyr tidyr ggplot2 cowplot stringr
+#' @import Seurat dplyr ggplot2 cowplot stringr
+#'
+#' @importFrom tidyr gather
 #'
 #' @examples
 #'
@@ -252,7 +254,9 @@ plot_propagation_stats = function(query_seura_object,reference_seurat,label_col_
 #'
 #' @export
 #'
-#' @import Seurat dplyr ggplot2 cowplot stringr igraph
+#' @import Seurat dplyr ggplot2 cowplot stringr
+#'
+#' @importFrom igraph graph_from_data_frame components degree
 #'
 #' @examples
 #'
@@ -278,10 +282,10 @@ compare_clustering = function(query_seura_object,clustering_1,clustering_2,min_c
   overview_edges =  overview_edges %>% dplyr::filter(n > min_cells, weight > min_pct)
   overview_graph = igraph::graph_from_data_frame(overview_edges,directed = TRUE)
   # find degree
-  node_degree = data.frame(node_id = names(degree(overview_graph, mode = "out")),
-                           out_degree = degree(overview_graph, mode = "out"),
-                           in_degree = degree(overview_graph, mode = "in"),
-                           component_id = components(overview_graph,mode="strong")$membership)
+  node_degree = data.frame(node_id = names(igraph::degree(overview_graph, mode = "out")),
+                           out_degree = igraph::degree(overview_graph, mode = "out"),
+                           in_degree = igraph::degree(overview_graph, mode = "in"),
+                           component_id = igraph::components(overview_graph,mode="strong")$membership)
 
   # add to overview
   overview_relevant = overview %>% dplyr::filter(n > min_cells, pct_clustering_1 > min_pct | pct_clustering_2 > min_pct)
