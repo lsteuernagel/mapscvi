@@ -44,10 +44,9 @@ An example workflow that embeds the Romanov et al. smart-seq dataset into the Hy
 library(mapscvi)
 ```
 
-We load the example data which contains a Seurat object.
+We can use the example data which is a Seurat object.
 
 ```{r}
-load("/beegfs/scratch/bruening_scratch/lsteuernagel/data/tmp_mapscvi/query_romanov_object.RData")
 query_romanov
 ```
 
@@ -57,37 +56,46 @@ The test data does not contain any dimensional reductions for visualization or a
 names(query_romanov@reductions)
 ```
 
-To map data to the reference HypoMap, we load a reduced Seurat object with relevant information.
+#### Obtain the reference HypoMap
 
-```{r}
-load("/beegfs/scratch/bruening_scratch/lsteuernagel/data/tmp_mapscvi/reference_hypoMap.RData")
+At the momment the reference seurat object cannot be distributed directly as part of the package.
+
+Load it directly (e.g. after download):
+
+```{r echo=TRUE, message=FALSE, warning=FALSE, results = 'hide'}
+neuron_map_seurat = readRDS("/beegfs/scratch/bruening_scratch/lsteuernagel/data/hypoMap/hypoMap_objects/hypothalamus_neurons_reference.rds")
 ```
 
 
-This wrapper function executes all required mapping steps. We provide the query object as well as a column from HypoMap which we want to predict.
+#### Map the data onto the HypoMap
+
+To map data to the reference HypoMap, we use the HypoMap model and a reduced reference seurat object with only relevant information and fewer cell.
+The model will automatically be used when setting the reference_mode to "hypoMap_neurons" or  "hypoMap_full" in the wrapper function below.
+However we still have to provide the reference object loaded above!
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE, results = 'hide'}
-query_romanov = map_new_seurat_hypoMap(query_romanov,suffix="query_romanov",label_col="K169_named",max_epochs=20,reference_seurat=reference_hypoMap)
+query_romanov_neurons = map_new_seurat_hypoMap(mapscvi::query_romanov,reference_mode = "hypoMap_neurons",reference_seurat = neuron_map_seurat, suffix="query_romanov_neurons",max_epochs=20)
 names(query_romanov@reductions)
 ```
 
-Take a look at the top clusters that were found in the query:
+We can take a look at the top clusters that were found in the query:
 
 ```{r}
-head(sort(table(query_romanov@meta.data$predicted),decreasing = TRUE),n = 10)
-```
-The package provides plotting functions to visualize the query on the reference:
-
-Plot them side by side. Here we set labelonplot to False to prevent cluster labels from being plotted.
-
-```{r}
-plot_query_labels(query_seura_object=query_romanov,reference_seurat=reference_hypoMap,label_col="K169_named",overlay = FALSE,labelonplot = FALSE)
+head(sort(table(query_romanov_neurons@meta.data$predicted),decreasing = TRUE),n = 10)
 ```
 
-Overlay them query over the reference. The overlay parameters allow to change the behavior of query points. Here we set labelonplot to True to include cluster labels on the plot. We can use the Seurat::DimPlot parameters to further adjust the plots. E.g. by decreasing the size of the labels.
+The package provides plotting functions to visualize the query cells on the reference:
+
+We can plot query and reference side by side. Here we set labelonplot to False to prevent cluster labels from being plotted and we use the object 'reference_hypoMap_full' that is automatically loaded when using the wrapper above.
 
 ```{r}
-plot_query_labels(query_seura_object=query_romanov,reference_seurat=reference_hypoMap,label_col="K169_named",overlay = TRUE,query_pt_size = 0.4,labelonplot = TRUE,label.size=1)
+plot_query_labels(query_seura_object=query_romanov_neurons,reference_seurat=neuron_map_seurat,label_col="K169_named",overlay = FALSE,labelonplot = FALSE)
+```
+
+Overlay them query over the reference. The overlay parameters allow to change the behavior of query points. We can use the Seurat::DimPlot parameters to further adjust the plots. E.g. by decreasing the size of the labels.
+
+```{r}
+plot_query_labels(query_seura_object=query_romanov_neurons,reference_seurat=neuron_map_seurat,label_col="K169_named",overlay = TRUE,query_pt_size = 0.4,labelonplot = FALSE,label.size=1)
 ```
 
 ## Detailed walkthrough
@@ -96,14 +104,9 @@ This section contains a more detailed walkthrough of the functions that are exec
 
 For this we will embed the mouse LaMannoBrainData stored in a SingleCellExperiment (available via the scRNAseq package) in the HypoMap.
 
-```{r message=FALSE, warning=FALSE, results = 'hide'}
-load("/beegfs/scratch/bruening_scratch/lsteuernagel/data/tmp_mapscvi/sce_lamanno_da.RData")
-```
-
 ```{r, echo=TRUE, message=FALSE, warning=FALSE, results = 'hide'}
 sce_lamanno_da
 ```
-
 The prepare_query function is able to load Seurat, SingleCellExperiment or matrix objects for mapping.
 
 Here we are using the prepare_query_hypoMap that extends the more generic prepare_query function with code to to automatically add metadata variables that are required for mapping to the HypoMap model. The function can also normalize the data, however for the scvi mapping raw counts are required!
@@ -115,10 +118,10 @@ lamanno_seurat_object
 
 This new seurat object is compatible with the downstream functions for mapping the data.
 
-Next predict_query can be used to embed the query data into the latent space of scvi. We have to specify a query path (which defaults to the HypoMap reference which is part of the package) and the number of epochs for training during mapping (10-20 should be sufficient. TODO: test this!).
+Next predict_query can be used to embed the query data into the latent space of scvi. We have to specify a model path and the number of epochs for training during mapping (10-20 should be sufficient. TODO: test this!).
 
 ```{r message=FALSE, warning=FALSE, results = 'hide'}
-model_path = "/beegfs/scratch/bruening_scratch/lsteuernagel/data/scHarmonize/hypothalamusMapNeurons_v4/harmonization_results/hypothalamus_neurons_reference/hypothalamus_neurons_reference_model/"
+model_path = paste0(system.file('extdata/models/hypothalamus_neurons_reference_model', package = 'mapscvi'),"/")
 max_epochs = 20
 lamanno_seurat_object = predict_query(lamanno_seurat_object,model_path,max_epochs = max_epochs)
 ```
@@ -129,22 +132,18 @@ names(lamanno_seurat_object@reductions)
 
 The scvi reduction is a pca-like low dimensional space that can be used to embed the data into the same UMAP as the reference object. This requires an existing UMAP model in the reference Seurat object that was calculated based on the same scvi latent space.
 
-We load the reference seurat object.
-
-```{r message=FALSE, warning=FALSE}
-load("/beegfs/scratch/bruening_scratch/lsteuernagel/data/tmp_mapscvi/reference_hypoMap.RData")
-```
+We use the neuron_map_seurat object loaded in the first section!
 
 Then we can calculate nearest neighbors and UMAP based on the reference. Additionally we can project labels (any categorical metadata column from the reference) using the same nearest neighbor graph. This helps with consistency between label propagation and UMAP. However there might be more accurate ways to propagate labels using other classifiers such as a random forest or scANVI.
 
 To propagate labels with the project_query function we can provide a vector of the same length as the reference cells (and same order!). Preferably this is a column from the metadata of the reference seurat object.
 
 ```{r message=TRUE, warning=TRUE, results = 'hide'}
-cluster_labels = reference_hypoMap@meta.data$K169_named
+cluster_labels = neuron_map_seurat@meta.data$K169_named
 reference_reduction = "scvi"
 lamanno_seurat_object = project_query(query_seurat_object = lamanno_seurat_object,
-                                      reference_map_reduc = reference_hypoMap@reductions[[reference_reduction]],
-                                      reference_map_umap = reference_hypoMap@reductions[[paste0("umap_",reference_reduction)]],
+                                      reference_map_reduc = neuron_map_seurat@reductions[[reference_reduction]],
+                                      reference_map_umap = neuron_map_seurat@reductions[[paste0("umap_",reference_reduction)]],
                                       query_reduction = "scvi",
                                       label_vec =cluster_labels)
 ```
@@ -152,15 +151,14 @@ lamanno_seurat_object = project_query(query_seurat_object = lamanno_seurat_objec
 This can then be used to plot the results side-by side:
 
 ```{r}
-plot_query_labels(query_seura_object=lamanno_seurat_object,reference_seurat=reference_hypoMap,label_col="K169_named",overlay = FALSE,labelonplot = FALSE)
+plot_query_labels(query_seura_object=lamanno_seurat_object,reference_seurat=neuron_map_seurat,label_col="K169_named",overlay = FALSE,labelonplot = FALSE)
 ```
 
 Or with overlay:
 
 ```{r}
-plot_query_labels(query_seura_object=lamanno_seurat_object,reference_seurat=reference_hypoMap,label_col="K169_named",overlay = TRUE,query_pt_size = 0.4,labelonplot = TRUE,label.size=1)
+plot_query_labels(query_seura_object=lamanno_seurat_object,reference_seurat=neuron_map_seurat,label_col="K169_named",overlay = TRUE,query_pt_size = 0.4,labelonplot = FALSE,label.size=1)
 ```
-
 This obviously didn't work out very well.
 
 Most cells were mapped to the same celltype in the middle of the UMAP, which is likely a result of missing 'true' neighbors:
@@ -168,8 +166,6 @@ Most cells were mapped to the same celltype in the middle of the UMAP, which is 
 ```{r}
 head(sort(table(lamanno_seurat_object@meta.data$predicted),decreasing = TRUE),n = 10)
 ```
-
-
 
 TODO: Add some indicators for quality of mapping.
 

@@ -13,11 +13,11 @@
 # # overwrite counts with empty sparse matrix to save space
 # empty_matrix <- Matrix::sparseMatrix(i = integer(0), j = integer(0), dims = reference_hypoMap@assays$RNA@counts@Dim, dimnames = reference_hypoMap@assays$RNA@counts@Dimnames)
 # empty_matrix <- as(empty_matrix, "dgCMatrix")
-# reference_hypoMap@assays$RNA@counts <- empty_matrix
-# reference_hypoMap@assays$RNA@data <- empty_matrix # error is okay
+# reference_hypoMap = SetAssayData(object = reference_hypoMap, slot = "counts", new.data = empty_matrix)
+# reference_hypoMap = SetAssayData(object = reference_hypoMap, slot = "data", new.data = empty_matrix)
 # # overwrite other slots with empty dummy matrix
 # dummy=matrix(data = as.numeric())
-# reference_hypoMap@assays$RNA@scale.data <- dummy[,-1] # error is okay
+# reference_hypoMap@assays$RNA@scale.data=dummy
 # reference_hypoMap@assays$RNA@meta.features <- as.data.frame(dummy[,-1])
 # print(object.size(reference_hypoMap) / 1000000)
 # reference_hypoMap_neurons = reference_hypoMap
@@ -53,11 +53,11 @@
 # # overwrite counts with empty sparse matrix to save space
 # empty_matrix <- Matrix::sparseMatrix(i = integer(0), j = integer(0), dims = reference_hypoMap_full@assays$RNA@counts@Dim, dimnames = reference_hypoMap_full@assays$RNA@counts@Dimnames)
 # empty_matrix <- as(empty_matrix, "dgCMatrix")
-# reference_hypoMap_full@assays$RNA@counts <- empty_matrix
-# reference_hypoMap_full@assays$RNA@data <- empty_matrix # error is okay
+# reference_hypoMap_full = SetAssayData(object = reference_hypoMap_full, slot = "counts", new.data = empty_matrix)
+# reference_hypoMap_full = SetAssayData(object = reference_hypoMap_full, slot = "data", new.data = empty_matrix)
 # # overwrite other slots with empty dummy matrix
 # dummy=matrix(data = as.numeric())
-# reference_hypoMap_full@assays$RNA@scale.data <- dummy[,-1] # error is okay
+# reference_hypoMap_full@assays$RNA@scale.data = dummy
 # reference_hypoMap_full@assays$RNA@meta.features <- as.data.frame(dummy[,-1])
 # print(object.size(reference_hypoMap_full) / 1000000)
 #
@@ -88,8 +88,12 @@
 # query_romanov = SeuratDisk::LoadH5Seurat(query_romanov_path)
 # query_romanov@reductions = list()
 # query_romanov@meta.data = query_romanov@meta.data[,1:20]
+# # overwrite other slots with empty dummy matrix
+# empty_matrix <- Matrix::sparseMatrix(i = integer(0), j = integer(0), dims = query_romanov@assays$RNA@counts@Dim, dimnames = query_romanov@assays$RNA@counts@Dimnames)
+# empty_matrix <- as(empty_matrix, "dgCMatrix")
+# query_romanov = SetAssayData(object = query_romanov, slot = "data", new.data = empty_matrix)
 # dummy=matrix(data = as.numeric())
-# query_romanov@assays[["RNA"]]@data <- dummy[,-1] # error is okay
+# query_romanov[["RNA"]]@scale.data = dummy
 # print(object.size(query_romanov) / 1000000)
 # #save testdata
 # ##save(query_romanov,file = "/beegfs/scratch/bruening_scratch/lsteuernagel/projects/mapscvi/data/query_romanov.RData")

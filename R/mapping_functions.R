@@ -407,33 +407,23 @@ map_new_seurat_hypoMap = function(query_seurat_object,reference_mode = "hypoMap_
 
   # evaluate reference_mode
   if(reference_mode == "hypoMap_neurons"){
+    message("Setting reference_mode to 'hypoMap_neurons'. Please ensure to provide a compatible 'reference_seurat' object!")
     # set path to model
     if(is.null(model_path)){
       model_path = paste0(system.file('extdata/models/hypothalamus_neurons_reference_model', package = 'mapscvi'),"/")
     }else{
       message("Warning: Overwriting default model path used for 'hypoMap_neurons' with custom path specified in model_path. Set model_path to NULL to avoid this behaviour.")
     }
-    # set reference object
-    if(is.null(reference_seurat)){
-      reference_seurat = mapscvi::reference_hypoMap_neurons
-      reference_reduction = "scvi"
-    }else{
-      message("Warning: Overwriting default reference object used for 'hypoMap_neurons' with custom reference specified in reference_seurat. Set reference_seurat to NULL to avoid this behaviour.")
-    }
+    if(label_col == ""){label_col = "K169_named"}
   }else if(reference_mode == "hypoMap_full"){
+    message("Setting reference_mode to 'hypoMap_full'. Please ensure to provide a compatible 'reference_seurat' object!")
     # set path to model
     if(is.null(model_path)){
       model_path = paste0(system.file('extdata/models/scVI_hypothalamus_full_map_model', package = 'mapscvi'),"/")
     }else{
       message("Warning: Overwriting default model path used for 'hypoMap_full' with custom path specified in model_path. Set model_path to NULL to avoid this behaviour.")
     }
-    # set reference object
-    if(is.null(reference_seurat)){
-      reference_seurat = mapscvi::reference_hypoMap_full
-      reference_reduction = "scvi"
-    }else{
-      message("Warning: Overwriting default reference object used for 'hypoMap_full' with custom reference specified in reference_seurat. Set reference_seurat to NULL to avoid this behaviour.")
-    }
+    if(label_col == ""){label_col = "Curated_CellType"}
   }else{
     message("Using custom reference and model provided.")
   }

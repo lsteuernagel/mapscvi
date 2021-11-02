@@ -39,10 +39,9 @@ into the HypoMap:
 library(mapscvi)
 ```
 
-We load the example data which contains a Seurat object.
+We can use the example data which is a Seurat object.
 
 ``` r
-load("/beegfs/scratch/bruening_scratch/lsteuernagel/data/tmp_mapscvi/query_romanov_object.RData")
 query_romanov
 #> An object of class Seurat 
 #> 21143 features across 845 samples within 1 assay 
@@ -57,59 +56,71 @@ names(query_romanov@reductions)
 #> NULL
 ```
 
-To map data to the reference HypoMap, we load a reduced Seurat object
-with relevant information.
+#### Obtain the reference HypoMap
+
+At the momment the reference seurat object cannot be distributed
+directly as part of the package.
+
+Load it directly (e.g. after download):
 
 ``` r
-load("/beegfs/scratch/bruening_scratch/lsteuernagel/data/tmp_mapscvi/reference_hypoMap.RData")
+neuron_map_seurat = readRDS("/beegfs/scratch/bruening_scratch/lsteuernagel/data/hypoMap/hypoMap_objects/hypothalamus_neurons_reference.rds")
 ```
 
-This wrapper function executes all required mapping steps. We provide
-the query object as well as a column from HypoMap which we want to
-predict.
+#### Map the data onto the HypoMap
+
+To map data to the reference HypoMap, we use the HypoMap model and a
+reduced reference seurat object with only relevant information and fewer
+cell. The model will automatically be used when setting the
+reference\_mode to “hypoMap\_neurons” or “hypoMap\_full” in the wrapper
+function below. However we still have to provide the reference object
+loaded above!
 
 ``` r
-query_romanov = map_new_seurat_hypoMap(query_romanov,suffix="query_romanov",label_col="K169_named",max_epochs=20,reference_seurat=reference_hypoMap)
+query_romanov_neurons = map_new_seurat_hypoMap(mapscvi::query_romanov,reference_mode = "hypoMap_neurons",reference_seurat = neuron_map_seurat, suffix="query_romanov_neurons",max_epochs=20)
 names(query_romanov@reductions)
 ```
 
-Take a look at the top clusters that were found in the query:
+We can take a look at the top clusters that were found in the query:
 
 ``` r
-head(sort(table(query_romanov@meta.data$predicted),decreasing = TRUE),n = 10)
+head(sort(table(query_romanov_neurons@meta.data$predicted),decreasing = TRUE),n = 10)
 #> 
-#>           Slc17a6.Nrn1.Tbr1.Shox2    Slc17a6.Foxb1.Pitx2.Sepp1.Mobp 
-#>                               141                                61 
-#>             Slc17a6.Nrn1.Sim1.Trh Slc17a6.Foxb1.Pitx2.Sepp1.Slc7a10 
-#>                                53                                49 
-#>                         Oxt.Smim3        Slc32a1.Hmx2.Hmx3.Prok2.Th 
-#>                                45                                25 
-#>        Slc17a6.Nrn1.Sim1.Ebf3.Crh       Slc32a1.Arx.Gad2.Sp9.Fbxw13 
-#>                                23                                22 
-#>                  Slc17a6.Nrn1.Sst             Slc32a1.Arx.Gad2.Sncg 
-#>                                20                                18
+#>           Shox2.Tbr1.Nrn1.HY2    Mobp.Sepp1.Pitx2.Foxb1.HY2 
+#>                           141                            61 
+#>             Trh.Sim1.Nrn1.HY2 Slc7a10.Sepp1.Pitx2.Foxb1.HY2 
+#>                            53                            49 
+#>                     Smim3.Oxt        Th.Prok2.Hmx3.Hmx2.HY1 
+#>                            45                            26 
+#>      Crh.Pou3f3.Sim1.Nrn1.HY2       Fbxw13.Sp9.Gad2.Arx.HY1 
+#>                            23                            22 
+#>                  Sst.Nrn1.HY2             Sncg.Gad2.Arx.HY1 
+#>                            20                            18
 ```
 
-The package provides plotting functions to visualize the query on the
-reference:
+The package provides plotting functions to visualize the query cells on
+the reference:
 
-Plot them side by side. Here we set labelonplot to False to prevent
-cluster labels from being plotted.
+We can plot query and reference side by side. Here we set labelonplot to
+False to prevent cluster labels from being plotted and we use the object
+‘reference\_hypoMap\_full’ that is automatically loaded when using the
+wrapper above.
 
 ``` r
-plot_query_labels(query_seura_object=query_romanov,reference_seurat=reference_hypoMap,label_col="K169_named",overlay = FALSE,labelonplot = FALSE)
+plot_query_labels(query_seura_object=query_romanov_neurons,reference_seurat=neuron_map_seurat,label_col="K169_named",overlay = FALSE,labelonplot = FALSE)
 ```
 
 <img src="man/figures/README-unnamed-chunk-8-1.png" width="100%" />
 
 Overlay them query over the reference. The overlay parameters allow to
-change the behavior of query points. Here we set labelonplot to True to
-include cluster labels on the plot. We can use the Seurat::DimPlot
+change the behavior of query points. We can use the Seurat::DimPlot
 parameters to further adjust the plots. E.g. by decreasing the size of
 the labels.
 
 ``` r
-plot_query_labels(query_seura_object=query_romanov,reference_seurat=reference_hypoMap,label_col="K169_named",overlay = TRUE,query_pt_size = 0.4,labelonplot = TRUE,label.size=1)
+plot_query_labels(query_seura_object=query_romanov_neurons,reference_seurat=neuron_map_seurat,label_col="K169_named",overlay = TRUE,query_pt_size = 0.4,labelonplot = FALSE,label.size=1)
+#> Scale for 'colour' is already present. Adding another scale for 'colour',
+#> which will replace the existing scale.
 ```
 
 <img src="man/figures/README-unnamed-chunk-9-1.png" width="100%" />
@@ -124,89 +135,7 @@ SingleCellExperiment (available via the scRNAseq package) in the
 HypoMap.
 
 ``` r
-load("/beegfs/scratch/bruening_scratch/lsteuernagel/data/tmp_mapscvi/sce_lamanno_da.RData")
-```
-
-``` r
 sce_lamanno_da
-#> Loading required package: SingleCellExperiment
-#> Loading required package: SummarizedExperiment
-#> Loading required package: MatrixGenerics
-#> Loading required package: matrixStats
-#> 
-#> Attaching package: 'MatrixGenerics'
-#> The following objects are masked from 'package:matrixStats':
-#> 
-#>     colAlls, colAnyNAs, colAnys, colAvgsPerRowSet, colCollapse,
-#>     colCounts, colCummaxs, colCummins, colCumprods, colCumsums,
-#>     colDiffs, colIQRDiffs, colIQRs, colLogSumExps, colMadDiffs,
-#>     colMads, colMaxs, colMeans2, colMedians, colMins, colOrderStats,
-#>     colProds, colQuantiles, colRanges, colRanks, colSdDiffs, colSds,
-#>     colSums2, colTabulates, colVarDiffs, colVars, colWeightedMads,
-#>     colWeightedMeans, colWeightedMedians, colWeightedSds,
-#>     colWeightedVars, rowAlls, rowAnyNAs, rowAnys, rowAvgsPerColSet,
-#>     rowCollapse, rowCounts, rowCummaxs, rowCummins, rowCumprods,
-#>     rowCumsums, rowDiffs, rowIQRDiffs, rowIQRs, rowLogSumExps,
-#>     rowMadDiffs, rowMads, rowMaxs, rowMeans2, rowMedians, rowMins,
-#>     rowOrderStats, rowProds, rowQuantiles, rowRanges, rowRanks,
-#>     rowSdDiffs, rowSds, rowSums2, rowTabulates, rowVarDiffs, rowVars,
-#>     rowWeightedMads, rowWeightedMeans, rowWeightedMedians,
-#>     rowWeightedSds, rowWeightedVars
-#> Loading required package: GenomicRanges
-#> Loading required package: stats4
-#> Loading required package: BiocGenerics
-#> Loading required package: parallel
-#> 
-#> Attaching package: 'BiocGenerics'
-#> The following objects are masked from 'package:parallel':
-#> 
-#>     clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
-#>     clusterExport, clusterMap, parApply, parCapply, parLapply,
-#>     parLapplyLB, parRapply, parSapply, parSapplyLB
-#> The following objects are masked from 'package:stats':
-#> 
-#>     IQR, mad, sd, var, xtabs
-#> The following objects are masked from 'package:base':
-#> 
-#>     anyDuplicated, append, as.data.frame, basename, cbind, colnames,
-#>     dirname, do.call, duplicated, eval, evalq, Filter, Find, get, grep,
-#>     grepl, intersect, is.unsorted, lapply, Map, mapply, match, mget,
-#>     order, paste, pmax, pmax.int, pmin, pmin.int, Position, rank,
-#>     rbind, Reduce, rownames, sapply, setdiff, sort, table, tapply,
-#>     union, unique, unsplit, which.max, which.min
-#> Loading required package: S4Vectors
-#> 
-#> Attaching package: 'S4Vectors'
-#> The following object is masked from 'package:base':
-#> 
-#>     expand.grid
-#> Loading required package: IRanges
-#> Loading required package: GenomeInfoDb
-#> Loading required package: Biobase
-#> Welcome to Bioconductor
-#> 
-#>     Vignettes contain introductory material; view with
-#>     'browseVignettes()'. To cite Bioconductor, see
-#>     'citation("Biobase")', and for packages 'citation("pkgname")'.
-#> 
-#> Attaching package: 'Biobase'
-#> The following object is masked from 'package:MatrixGenerics':
-#> 
-#>     rowMedians
-#> The following objects are masked from 'package:matrixStats':
-#> 
-#>     anyMissing, rowMedians
-#> class: SingleCellExperiment 
-#> dim: 18219 243 
-#> metadata(0):
-#> assays(1): counts
-#> rownames(18219): Rp1 Sox17 ... Gm20826_loc2 Erdr1
-#> rowData names(0):
-#> colnames(243): 1772072122_A04 1772072122_A05 ... 1772099011_H05
-#>   1772099012_E04
-#> colData names(2): CELL_ID Cell_type
-#> reducedDimNames(0):
-#> altExpNames(0):
 ```
 
 The prepare\_query function is able to load Seurat, SingleCellExperiment
@@ -230,13 +159,12 @@ This new seurat object is compatible with the downstream functions for
 mapping the data.
 
 Next predict\_query can be used to embed the query data into the latent
-space of scvi. We have to specify a query path (which defaults to the
-HypoMap reference which is part of the package) and the number of epochs
+space of scvi. We have to specify a model path and the number of epochs
 for training during mapping (10-20 should be sufficient. TODO: test
 this!).
 
 ``` r
-model_path = "/beegfs/scratch/bruening_scratch/lsteuernagel/data/scHarmonize/hypothalamusMapNeurons_v4/harmonization_results/hypothalamus_neurons_reference/hypothalamus_neurons_reference_model/"
+model_path = paste0(system.file('extdata/models/hypothalamus_neurons_reference_model', package = 'mapscvi'),"/")
 max_epochs = 20
 lamanno_seurat_object = predict_query(lamanno_seurat_object,model_path,max_epochs = max_epochs)
 ```
@@ -251,11 +179,7 @@ to embed the data into the same UMAP as the reference object. This
 requires an existing UMAP model in the reference Seurat object that was
 calculated based on the same scvi latent space.
 
-We load the reference seurat object.
-
-``` r
-load("/beegfs/scratch/bruening_scratch/lsteuernagel/data/tmp_mapscvi/reference_hypoMap.RData")
-```
+We use the neuron\_map\_seurat object loaded in the first section!
 
 Then we can calculate nearest neighbors and UMAP based on the reference.
 Additionally we can project labels (any categorical metadata column from
@@ -270,48 +194,53 @@ Preferably this is a column from the metadata of the reference seurat
 object.
 
 ``` r
-cluster_labels = reference_hypoMap@meta.data$K169_named
+cluster_labels = neuron_map_seurat@meta.data$K169_named
 reference_reduction = "scvi"
 lamanno_seurat_object = project_query(query_seurat_object = lamanno_seurat_object,
-                                      reference_map_reduc = reference_hypoMap@reductions[[reference_reduction]],
-                                      reference_map_umap = reference_hypoMap@reductions[[paste0("umap_",reference_reduction)]],
+                                      reference_map_reduc = neuron_map_seurat@reductions[[reference_reduction]],
+                                      reference_map_umap = neuron_map_seurat@reductions[[paste0("umap_",reference_reduction)]],
                                       query_reduction = "scvi",
                                       label_vec =cluster_labels)
-#> 2021-09-13 16:32:28: Project UMAP..
-#> Computing nearest neighbor graph
+#> 2021-11-02 17:26:55: Project UMAP..
+#> Computing nearest neighbors
 #> Warning: The following arguments are not used: seed_use, return.neighbor
 #> Running UMAP projection
-#> 16:32:49 Read 243 rows and found  numeric columns
-#> 16:32:49 Processing block 1 of 1
-#> 16:32:49 Commencing smooth kNN distance calibration using 1 thread
-#> 16:32:49 Initializing by weighted average of neighbor coordinates using 1 thread
-#> 16:32:49 Commencing optimization for 67 epochs, with 7290 positive edges
-#> 16:32:49 Finished
+#> 17:27:18 Read 243 rows
+#> 17:27:18 Processing block 1 of 1
+#> 17:27:18 Commencing smooth kNN distance calibration using 1 thread
+#> 17:27:18 Initializing by weighted average of neighbor coordinates using 1 thread
+#> 17:27:18 Commencing optimization for 67 epochs, with 7290 positive edges
+#> 17:27:18 Finished
 #> Warning: No assay specified, setting assay as RNA by default.
-#> 2021-09-13 16:32:49: Add results to Seurat..
+#> 2021-11-02 17:27:18: Add results to Seurat..
 #> Warning: Keys should be one or more alphanumeric characters followed by an
 #> underscore, setting key from umap_scvi to umapscvi_
 #> Warning: All keys should be one or more alphanumeric characters followed by an
 #> underscore '_', setting key to umapscvi_
-#> 2021-09-13 16:32:49: Predict labels...
+#> 2021-11-02 17:27:18: Predict labels...
+#> Estimate probabilities
+#> Estimate entropy
+#> Found query_ref_nn
+#> Calculating average distances ...
 ```
 
 This can then be used to plot the results side-by side:
 
 ``` r
-plot_query_labels(query_seura_object=lamanno_seurat_object,reference_seurat=reference_hypoMap,label_col="K169_named",overlay = FALSE,labelonplot = FALSE)
+plot_query_labels(query_seura_object=lamanno_seurat_object,reference_seurat=neuron_map_seurat,label_col="K169_named",overlay = FALSE,labelonplot = FALSE)
 ```
 
-<img src="man/figures/README-unnamed-chunk-17-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-15-1.png" width="100%" />
 
 Or with overlay:
 
 ``` r
-plot_query_labels(query_seura_object=lamanno_seurat_object,reference_seurat=reference_hypoMap,label_col="K169_named",overlay = TRUE,query_pt_size = 0.4,labelonplot = TRUE,label.size=1)
+plot_query_labels(query_seura_object=lamanno_seurat_object,reference_seurat=neuron_map_seurat,label_col="K169_named",overlay = TRUE,query_pt_size = 0.4,labelonplot = FALSE,label.size=1)
+#> Scale for 'colour' is already present. Adding another scale for 'colour',
+#> which will replace the existing scale.
 ```
 
-<img src="man/figures/README-unnamed-chunk-18-1.png" width="100%" />
-
+<img src="man/figures/README-unnamed-chunk-16-1.png" width="100%" />
 This obviously didn’t work out very well.
 
 Most cells were mapped to the same celltype in the middle of the UMAP,
@@ -320,12 +249,14 @@ which is likely a result of missing ‘true’ neighbors:
 ``` r
 head(sort(table(lamanno_seurat_object@meta.data$predicted),decreasing = TRUE),n = 10)
 #> 
-#>         Slc17a6.Nrn1.Tbr1.Ebf3 Slc17a6.Foxb1.Pitx2.Sepp1.Mobp 
-#>                            200                             25 
-#>   Slc32a1.Satb2.Fam159b.Slc6a3   Slc17a6.Nrn1.Tbr1.Pitx2.Irx3 
-#>                             10                              6 
-#>          Slc32a1.Arx.Gad2.Sncg         Slc32a1.Hmx2.Lef1.Prph 
-#>                              1                              1
+#>         Ebf3.Tbr1.Nrn1.HY2 Mobp.Sepp1.Pitx2.Foxb1.HY2 
+#>                        182                         26 
+#>   Slc6a3.Fam159b.Satb2.HY1   Irx3.Pitx2.Tbr1.Nrn1.HY2 
+#>                         24                          8 
+#>          Ngfr.Lhx6.Arx.HY1         Prph.Lef1.Hmx2.HY1 
+#>                          1                          1 
+#>          Sncg.Gad2.Arx.HY1 
+#>                          1
 ```
 
 TODO: Add some indicators for quality of mapping.
