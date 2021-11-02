@@ -88,16 +88,17 @@
 # query_romanov = SeuratDisk::LoadH5Seurat(query_romanov_path)
 # query_romanov@reductions = list()
 # query_romanov@meta.data = query_romanov@meta.data[,1:20]
+# dummy=matrix(data = as.numeric())
+# query_romanov@assays[["RNA"]]@data <- dummy[,-1] # error is okay
+# print(object.size(query_romanov) / 1000000)
 # #save testdata
-# save(query_romanov,file = "/beegfs/scratch/bruening_scratch/lsteuernagel/projects/mapscvi/data/query_romanov.RData")
+# ##save(query_romanov,file = "/beegfs/scratch/bruening_scratch/lsteuernagel/projects/mapscvi/data/query_romanov.RData")
 # #
 # require(scRNAseq)
 # sce_lamanno_da <- LaMannoBrainData(which = "mouse-adult",ensembl=FALSE)
-# object.size(sce_lamanno_da)
 # object.size(sce_lamanno_da) / 1000000
-# save(sce_lamanno_da,file = "/beegfs/scratch/bruening_scratch/lsteuernagel/projects/mapscvi/data/sce_lamanno_da.RData")
-# dummy=matrix(data = as.numeric())
-# query_romanov@assays[["RNA"]]@data <- dummy[,-1] # error is okay
+# ##save(sce_lamanno_da,file = "/beegfs/scratch/bruening_scratch/lsteuernagel/projects/mapscvi/data/sce_lamanno_da.RData")
+#
 # #save testdata
 # save(query_romanov,file = "/beegfs/scratch/bruening_scratch/lsteuernagel/projects/mapscvi/data/query_romanov_object.RData")
 # save(sce_lamanno_da,file = "/beegfs/scratch/bruening_scratch/lsteuernagel/projects/mapscvi/data/sce_lamanno_da.RData")
