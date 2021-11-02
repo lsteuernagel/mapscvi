@@ -6,6 +6,7 @@
 \usage{
 map_new_seurat_hypoMap(
   query_seurat_object,
+  reference_mode = "hypoMap_neurons",
   suffix = "query",
   assay = "RNA",
   subset_col = "",
@@ -14,14 +15,15 @@ map_new_seurat_hypoMap(
   max_epochs,
   reference_seurat = NULL,
   reference_reduction = "scvi",
- 
-    model_path = "/beegfs/scratch/bruening_scratch/lsteuernagel/data/scHarmonize/hypothalamusMapNeurons_v4/harmonization_results/hypothalamus_neurons_reference/hypothalamus_neurons_reference_model/",
+  model_path = NULL,
   use_reticulate = FALSE,
   global_seed = 12345
 )
 }
 \arguments{
 \item{query_seurat_object}{Seurat object}
+
+\item{reference_mode}{directly specify what to use as reference. Possible values are either 'hypoMap_neurons', 'hypoMap_full' or 'manual'. This will set default values for reference_seurat, reference_reduction and model_path that can be overwritten by directly specifying them. Setting this parameter to 'manual' or NULL requires valid entries for the other parameters.}
 
 \item{suffix}{query project name. defaults to 'query'}
 
@@ -49,6 +51,6 @@ map_new_seurat_hypoMap(
 formatted seurat object
 }
 \description{
-Wrapper functions that executes low level functions to prepare, predict and project new data
-NOT IMPLEMENTED YET!
+Wrapper functions that executes low level functions to prepare, predict and project new data onto a reference based on an scvi model.
+Set reference_mode to either 'hypoMap_neurons' or 'hypoMap_full' to project new data onto hypoMap. Use the parameters for model and reference to specify any custom data and still use this wrapper function.
 }

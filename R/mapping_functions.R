@@ -381,13 +381,14 @@ propagate_labels_prob = function(neighbors_object=NULL,label_vec,query_seurat_ob
 
 #' Map a query seurat onto a reference
 #'
-#' Wrapper functions that executes low level functions to prepare, predict and project new data
-#' NOT IMPLEMENTED YET!
+#' Wrapper functions that executes low level functions to prepare, predict and project new data onto a reference based on an scvi model.
+#' Set reference_mode to either 'hypoMap_neurons' or 'hypoMap_full' to project new data onto hypoMap. Use the parameters for model and reference to specify any custom data and still use this wrapper function.
 #'
 #' @inheritParams prepare_query
 #' @inheritParams predict_query
 #' @inheritParams project_query
 #' @param label_col the column name in reference_map_metadata with labels to propagate
+#' @param reference_mode directly specify what to use as reference. Possible values are either 'hypoMap_neurons', 'hypoMap_full' or 'manual'. This will set default values for reference_seurat, reference_reduction and model_path that can be overwritten by directly specifying them. Setting this parameter to 'manual' or NULL requires valid entries for the other parameters.
 #' @param reference_seurat reference seurat
 #' @param reference_reduction name of scvi reduction in reference. Also expect a umap named as 'umap_'reference_reduction
 #'
@@ -399,21 +400,61 @@ propagate_labels_prob = function(neighbors_object=NULL,label_vec,query_seurat_ob
 #'
 #' @examples
 
-map_new_seurat_hypoMap = function(query_seurat_object,suffix="query",assay="RNA",subset_col="",label_col="",subset_values=NULL,max_epochs,reference_seurat=NULL,reference_reduction="scvi",model_path = "/beegfs/scratch/bruening_scratch/lsteuernagel/data/scHarmonize/hypothalamusMapNeurons_v4/harmonization_results/hypothalamus_neurons_reference/hypothalamus_neurons_reference_model/",
+map_new_seurat_hypoMap = function(query_seurat_object,reference_mode = "hypoMap_neurons",suffix="query",assay="RNA",subset_col="",
+                                  label_col="",subset_values=NULL,max_epochs,
+                                  reference_seurat=NULL,reference_reduction="scvi",model_path = NULL,
                                   use_reticulate = FALSE,global_seed=12345){
+
+  # evaluate reference_mode
+  if(reference_mode == "hypoMap_neurons"){
+    # set path to model
+    if(is.null(model_path)){
+      model_path = paste0(system.file('extdata/models/hypothalamus_neurons_reference_model', package = 'mapscvi'),"/")
+    }else{
+      message("Warning: Overwriting default model path used for 'hypoMap_neurons' with custom path specified in model_path. Set model_path to NULL to avoid this behaviour.")
+    }
+    # set reference object
+    if(is.null(reference_seurat)){
+      reference_seurat = mapscvi::reference_hypoMap_neurons
+      reference_reduction = "scvi"
+    }else{
+      message("Warning: Overwriting default reference object used for 'hypoMap_neurons' with custom reference specified in reference_seurat. Set reference_seurat to NULL to avoid this behaviour.")
+    }
+  }else if(reference_mode == "hypoMap_full"){
+    # set path to model
+    if(is.null(model_path)){
+      model_path = paste0(system.file('extdata/models/scVI_hypothalamus_full_map_model', package = 'mapscvi'),"/")
+    }else{
+      message("Warning: Overwriting default model path used for 'hypoMap_full' with custom path specified in model_path. Set model_path to NULL to avoid this behaviour.")
+    }
+    # set reference object
+    if(is.null(reference_seurat)){
+      reference_seurat = mapscvi::reference_hypoMap_full
+      reference_reduction = "scvi"
+    }else{
+      message("Warning: Overwriting default reference object used for 'hypoMap_full' with custom reference specified in reference_seurat. Set reference_seurat to NULL to avoid this behaviour.")
+    }
+  }else{
+    message("Using custom reference and model provided.")
+  }
 
   # prepare
   query_seurat_object = prepare_query_hypoMap(query_seurat_object,suffix=suffix,assay=assay,subset_col=subset_col,subset_values=subset_values,normalize=TRUE,
                                               covariates=c(batch_var = "Batch_ID",inferred_sex = "inferred_sex.x",rpl_signature_expr_median = "rpl_signature_expr_median"),global_seed=global_seed)
+
+  # check if model path is valid:
+  if(!file.exists(paste0(model_path,"attr.pkl"))){
+    stop("Error: Please provide a valid model_path to an scvi model.")
+  }
   # predict with scvi
   query_seurat_object = predict_query(query_seurat_object,model_path,max_epochs = max_epochs,assay="RNA",global_seed=global_seed)
 
   # check
   if(is.null(reference_seurat)){
-    stop("Please provide reference seurat with latent space, umap and metadata")
+    stop("Error: Please provide reference seurat with latent space, umap and metadata")
   }
   if(! (reference_reduction %in% names(reference_seurat@reductions) & paste0("umap_",reference_reduction) %in% names(reference_seurat@reductions))){
-    stop("Cannot find '",reference_reduction,"' or 'umap_",reference_reduction,"'  in provided reference_seurat.")
+    stop("Error: Cannot find '",reference_reduction,"' or 'umap_",reference_reduction,"'  in provided reference_seurat.")
   }
 
   # make label_vec
