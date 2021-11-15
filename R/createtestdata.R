@@ -1,6 +1,6 @@
-# #####
-# ## load neuron map
-# #####
+# # #####
+# # ## load neuron map
+# # #####
 # map_name = "hypothalamus_neurons_reference"
 # map_path = "/beegfs/scratch/bruening_scratch/lsteuernagel/data/hypoMap/hypoMap_objects/"
 # map_seurat_path = paste0(map_path,map_name,".rds")
@@ -27,12 +27,18 @@
 # rownames(temp_meta) = temp_meta$Cell_ID
 # reference_hypoMap@meta.data = temp_meta
 #
+# # add markers as a list for K169_pruned
+# markers_K169_pruned_list = neuron_map_seurat@misc$markers_comparisons_all %>%
+#   dplyr::filter(grepl("K169",cluster_1) & specificity > 0.5 & p_val_adj < 0.001) %>% dplyr::arrange(desc(specificity))
+# markers_K169_pruned_list = base::split(markers_K169_pruned_list$gene,markers_K169_pruned_list$cluster_1)
+# reference_hypoMap@misc$markers_K169_pruned = markers_K169_pruned_list
+#
 # # print size and change name
 # print(object.size(reference_hypoMap) / 1000000)
 # reference_hypoMap_neurons = reference_hypoMap
 #
 # save(reference_hypoMap_neurons,file = "/beegfs/scratch/bruening_scratch/lsteuernagel/projects/mapscvi/data/reference_hypoMap_neurons.RData",compress="xz",compression_level = "9")
-#
+
 # # set model
 # system(paste0("mkdir -p /beegfs/scratch/bruening_scratch/lsteuernagel/projects/mapscvi/inst/extdata/models/"))
 # model_path = "/beegfs/scratch/bruening_scratch/lsteuernagel/data/hypoMap/hypoMap_models/hypothalamus_neurons_reference_model/"
@@ -99,7 +105,7 @@
 # temp_meta = temp_meta %>% dplyr::select(Cell_ID,Sample_ID,nFeature_RNA,nCount_RNA,percent.mt,Sex,Author_CellType,Subregion,predicted_Curated_Class)
 # rownames(temp_meta) = temp_meta$Cell_ID
 # query_romanov@meta.data = temp_meta
-
+#
 # #
 # require(scRNAseq)
 # sce_lamanno_da <- LaMannoBrainData(which = "mouse-adult",ensembl=FALSE)

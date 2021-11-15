@@ -442,7 +442,7 @@ map_new_seurat_hypoMap = function(query_seurat_object,reference_mode = "hypoMap_
     }else{
       message("Warning: Overwriting default reference object used for 'hypoMap_full' with custom reference specified in reference_seurat. Set reference_seurat to NULL to avoid this behaviour.")
     }
-    if(label_col == ""){label_col = "Curated_CellType"}
+    if(label_col == ""){label_col = "Curated_Class"}
   }else{
     message("Using custom reference and model provided.")
   }
