@@ -7,21 +7,23 @@
 adjusted_cell_probabilities(
   dist_Nc,
   labels_of_neighbor,
-  apply_gaussian = TRUE,
+  with_euclidean = FALSE,
   result_type = "all"
 )
 }
 \arguments{
 \item{dist_Nc}{vector of length k with euclidean distances to neigbors}
 
-\item{result_type}{return type: "all","label","entropy"}
+\item{labels_of_neighbor}{vector of length k with labels of neighbors}
 
-\item{label_of_neighbor}{vector of length k with labels of neighbors}
+\item{with_euclidean}{if input is euclidean: use gussian smoothing and convert to similarity through this. If not assume cosine distance and just invert using: 1 - dist_Nc^2/2}
+
+\item{result_type}{return type: "all","label","entropy"}
 }
 \value{
 label probability depending on result_type
 }
 \description{
 Cell probabilities similar to scARches algorithm
-This function runs per cell
+This function runs per cell.
 }

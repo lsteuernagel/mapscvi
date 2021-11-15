@@ -13,7 +13,7 @@ propagate_labels_prob(
   reduction_name_reference = "scvi",
   annoy.metric = "cosine",
   k.param = 30,
-  apply_gaussian = FALSE,
+  with_euclidean = FALSE,
   add_entropy = FALSE,
   add_to_seurat = FALSE
 )
@@ -35,7 +35,7 @@ propagate_labels_prob(
 
 \item{k.param}{k param for neighbor finding (not used when neighbors_object is provided)}
 
-\item{apply_gaussian}{Apply gaussian kernel to smooth distances .only use when distance = euclidean ! (or a neighbors_object based on euclidean distances is provided)}
+\item{with_euclidean}{Apply gaussian kernel to smooth distances .only use when distance = euclidean ! (or a neighbors_object based on euclidean distances is provided)}
 
 \item{add_entropy}{re-run to calculate entropy as uncertainty measure}
 

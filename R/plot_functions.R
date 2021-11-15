@@ -345,7 +345,7 @@ visNetwork_clustering = function(query_seura_object,clustering_1,clustering_2,mi
     return(NULL)
   }
   if (!requireNamespace("RColorBrewer", quietly = TRUE)) {
-    warning("The visNetwork package must be installed to use this function")
+    warning("The RColorBrewer package must be installed to use this function")
     return(NULL)
   }
 
