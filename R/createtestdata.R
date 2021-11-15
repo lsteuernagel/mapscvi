@@ -83,7 +83,7 @@
 # #####
 #
 # ## load romanov query
-# #suffix ="mapped_data_yeo_romanov" # a name
+#suffix ="mapped_data_yeo_romanov" # a name
 # query_romanov_path = "/beegfs/scratch/bruening_scratch/lsteuernagel/data/scHarmonize/hypothalamusMapNeurons_v4/harmonization_results/hypothalamus_neurons_reference/mapped_data_Romanov_neurons/mapped_data_Romanov_neurons.h5Seurat" # seurat object to load
 # query_romanov = SeuratDisk::LoadH5Seurat(query_romanov_path)
 # query_romanov@reductions = list()
@@ -104,8 +104,8 @@
 # ##save(sce_lamanno_da,file = "/beegfs/scratch/bruening_scratch/lsteuernagel/projects/mapscvi/data/sce_lamanno_da.RData")
 #
 # #save testdata
-# save(query_romanov,file = "/beegfs/scratch/bruening_scratch/lsteuernagel/projects/mapscvi/data/query_romanov.RData")
-# save(sce_lamanno_da,file = "/beegfs/scratch/bruening_scratch/lsteuernagel/projects/mapscvi/data/sce_lamanno_da.RData")
+# save(query_romanov,file = "/beegfs/scratch/bruening_scratch/lsteuernagel/projects/mapscvi/data/query_romanov.RData",compress="xz",compression_level = "9")
+# save(sce_lamanno_da,file = "/beegfs/scratch/bruening_scratch/lsteuernagel/projects/mapscvi/data/sce_lamanno_da.RData",compress="xz",compression_level = "9")
 #
 # #####
 # ## function for downsampling

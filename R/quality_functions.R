@@ -206,7 +206,7 @@ check_distance_neighbors = function(query_seurat_object,reference_seurat,reducti
 
   # for each query cell: get average dist of its reference neighbors
   query_neighbor_dists = apply(query_to_ref_idx[which(query_seurat_object@meta.data$query),2:ncol(query_to_ref_idx)],1,function(x,nn_dist){
-    median(apply(nn_dist[x,2:ncol(nn_dist)],1,stats::median))
+    stats::median(apply(nn_dist[x,2:ncol(nn_dist)],1,stats::median))
   },nn_dist=ref_dists)
   # summarise
   query_neighbor_dists = data.frame(Cell_ID = query_seurat_object@meta.data$Cell_ID[query_seurat_object@meta.data$query], median_dist_refNeighbors = query_neighbor_dists)
