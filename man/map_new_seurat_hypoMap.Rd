@@ -53,4 +53,6 @@ formatted seurat object
 \description{
 Wrapper functions that executes low level functions to prepare, predict and project new data onto a reference based on an scvi model.
 Set reference_mode to either 'hypoMap_neurons' or 'hypoMap_full' to project new data onto hypoMap. Use the parameters for model and reference to specify any custom data and still use this wrapper function.
+If the model differs strongly from the hypoMap mdoels (covariates used etc) the prepare and mapping functions might break.
+In that case please manually run the prepare, predict and project functions as shown in the readme.
 }

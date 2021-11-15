@@ -56,26 +56,15 @@ The test data does not contain any dimensional reductions for visualization or a
 names(query_romanov@reductions)
 ```
 
-#### Obtain the reference HypoMap
-
-At the momment the reference seurat object cannot be distributed directly as part of the package.
-
-Load it directly (e.g. after download):
-
-```{r echo=TRUE, message=FALSE, warning=FALSE, results = 'hide'}
-neuron_map_seurat = readRDS("/beegfs/scratch/bruening_scratch/lsteuernagel/data/hypoMap/hypoMap_objects/hypothalamus_neurons_reference.rds")
-```
-
 
 #### Map the data onto the HypoMap
 
 To map data to the reference HypoMap, we use the HypoMap model and a reduced reference seurat object with only relevant information and fewer cell.
-The model will automatically be used when setting the reference_mode to "hypoMap_neurons" or  "hypoMap_full" in the wrapper function below.
-However we still have to provide the reference object loaded above!
+The model and reference seurat for neighbor search and umap construction will automatically be used when setting the reference_mode to "hypoMap_neurons" or  "hypoMap_full" in the wrapper function below.
 
-```{r echo=TRUE, message=FALSE, warning=FALSE, results = 'hide'}
-query_romanov_neurons = map_new_seurat_hypoMap(mapscvi::query_romanov,reference_mode = "hypoMap_neurons",reference_seurat = neuron_map_seurat, suffix="query_romanov_neurons",max_epochs=20)
-names(query_romanov@reductions)
+```{r echo=FALSE, message=FALSE, warning=FALSE, results = 'hide'}
+query_romanov_neurons = map_new_seurat_hypoMap(mapscvi::query_romanov,reference_mode = "hypoMap_neurons", suffix="query_romanov_neurons",max_epochs=20)
+names(query_romanov_neurons@reductions)
 ```
 
 We can take a look at the top clusters that were found in the query:

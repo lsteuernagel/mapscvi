@@ -93,8 +93,13 @@
 # dummy=matrix(data = as.numeric())
 # query_romanov[["RNA"]]@scale.data = dummy
 # print(object.size(query_romanov) / 1000000)
-# #save testdata
-# ##save(query_romanov,file = "/beegfs/scratch/bruening_scratch/lsteuernagel/projects/mapscvi/data/query_romanov.RData")
+#
+# # remove some metadata to make the object smaller
+# temp_meta = query_romanov@meta.data
+# temp_meta = temp_meta %>% dplyr::select(Cell_ID,Sample_ID,nFeature_RNA,nCount_RNA,percent.mt,Sex,Author_CellType,Subregion,predicted_Curated_Class)
+# rownames(temp_meta) = temp_meta$Cell_ID
+# query_romanov@meta.data = temp_meta
+
 # #
 # require(scRNAseq)
 # sce_lamanno_da <- LaMannoBrainData(which = "mouse-adult",ensembl=FALSE)
