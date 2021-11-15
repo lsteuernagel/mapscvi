@@ -17,3 +17,20 @@
 #' @source \url{https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE76381}
 "sce_lamanno_da"
 
+#' Reference object for mapping of new hypothalamus data
+#'
+#' This is a simplified object of the neuron HypoMap, without count values to reduce the size.
+#'
+#' @format Seurat object with metadata and reductions 'scvi' and 'umap_scvi' including the umap model.
+#'
+#' @source \url{placeholder}
+"reference_hypoMap_neurons"
+
+#' Reference object for mapping of new hypothalamus data
+#'
+#' This is a simplified object of the full HypoMap with all celltypes, without count values to reduce the size.
+#'
+#' @format Seurat object with metadata and reductions 'scvi' and 'umap_scvi' including the umap model.
+#'
+#' @source \url{placeholder}
+"reference_hypoMap_full"
