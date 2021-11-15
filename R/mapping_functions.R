@@ -394,6 +394,7 @@ propagate_labels_prob = function(neighbors_object=NULL,label_vec,query_seurat_ob
 #' @param reference_mode directly specify what to use as reference. Possible values are either 'hypoMap_neurons', 'hypoMap_full' or 'manual'. This will set default values for reference_seurat, reference_reduction and model_path that can be overwritten by directly specifying them. Setting this parameter to 'manual' or NULL requires valid entries for the other parameters.
 #' @param reference_seurat reference seurat
 #' @param reference_reduction name of scvi reduction in reference. Also expect a umap named as 'umap_'reference_reduction
+#' @param inferred_sex_varname variable name for inferred sex that has to correspond to model (will automatically be set when using reference_mode)
 #'
 #' @return formatted seurat object
 #'
@@ -405,9 +406,8 @@ propagate_labels_prob = function(neighbors_object=NULL,label_vec,query_seurat_ob
 
 map_new_seurat_hypoMap = function(query_seurat_object,reference_mode = "hypoMap_neurons",suffix="query",assay="RNA",subset_col="",
                                   label_col="",subset_values=NULL,max_epochs,
-                                  reference_seurat=NULL,reference_reduction="scvi",model_path = NULL,
+                                  reference_seurat=NULL,reference_reduction="scvi",model_path = NULL,inferred_sex_varname = "inferred_sex" ,
                                   use_reticulate = FALSE,global_seed=12345){
-  inferred_sex_varname = "inferred_sex" # setting a default
   # evaluate reference_mode
   if(reference_mode == "hypoMap_neurons"){
     message("Setting reference_mode to 'hypoMap_neurons'.") # Please ensure to provide a compatible 'reference_seurat' object!"

@@ -16,6 +16,7 @@ map_new_seurat_hypoMap(
   reference_seurat = NULL,
   reference_reduction = "scvi",
   model_path = NULL,
+  inferred_sex_varname = "inferred_sex",
   use_reticulate = FALSE,
   global_seed = 12345
 )
@@ -42,6 +43,8 @@ map_new_seurat_hypoMap(
 \item{reference_reduction}{name of scvi reduction in reference. Also expect a umap named as 'umap_'reference_reduction}
 
 \item{model_path}{path to pretrained scvi model}
+
+\item{inferred_sex_varname}{variable name for inferred sex that has to correspond to model (will automatically be set when using reference_mode)}
 
 \item{use_reticulate}{if TRUE: tries to call scvi via reticulate, if FALSE: exports an anndata object to a temp file and then calls a python script to run prediction code using system()}
 
