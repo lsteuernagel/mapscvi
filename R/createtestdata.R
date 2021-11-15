@@ -19,18 +19,19 @@
 # dummy=matrix(data = as.numeric())
 # reference_hypoMap@assays$RNA@scale.data=dummy
 # reference_hypoMap@assays$RNA@meta.features <- as.data.frame(dummy[,-1])
+# # remove some metadata to make the object smaller
+# temp_meta = reference_hypoMap@meta.data
+# temp_meta = temp_meta %>% dplyr::select(Cell_ID,Dataset,Batch_ID,Technology,inferred_sex.x,nFeature_RNA,nCount_RNA,rpl_signature_expr_median,
+#                                         Age,Diet,Subregion,suggested_region_curated,Author_CellType,K4_named,K14_named,K31_named,K98_named,K169_named,K240_named,
+#                                         K329_named,K4_pruned,K14_pruned,K31_pruned,K98_pruned,K169_pruned,K240_pruned,K329_pruned)
+# rownames(temp_meta) = temp_meta$Cell_ID
+# reference_hypoMap@meta.data = temp_meta
+#
+# # print size and change name
 # print(object.size(reference_hypoMap) / 1000000)
 # reference_hypoMap_neurons = reference_hypoMap
 #
-# ## downsample:
-# ## source("/beegfs/scratch/bruening_scratch/lsteuernagel/projects/scHarmonize/utils.R") or See function below!!!!
-# cluster_downsample = downsample_balanced_iterative(reference_hypoMap_neurons@meta.data,target_sample_size = 20000,predictor_var = "K169_pruned",stepsize = 500,global_seed = 12345)
-# table(cluster_downsample$K169_pruned)
-#
-# reference_hypoMap_neurons = subset(reference_hypoMap_neurons,cells = cluster_downsample$Cell_ID)
-# print(object.size(reference_hypoMap_neurons) / 1000000)
-#
-# save(reference_hypoMap_neurons,file = "/beegfs/scratch/bruening_scratch/lsteuernagel/projects/mapscvi/data/reference_hypoMap_neurons.RData")
+# save(reference_hypoMap_neurons,file = "/beegfs/scratch/bruening_scratch/lsteuernagel/projects/mapscvi/data/reference_hypoMap_neurons.RData",compress="xz",compression_level = "9")
 #
 # # set model
 # system(paste0("mkdir -p /beegfs/scratch/bruening_scratch/lsteuernagel/projects/mapscvi/inst/extdata/models/"))
@@ -59,19 +60,16 @@
 # dummy=matrix(data = as.numeric())
 # reference_hypoMap_full@assays$RNA@scale.data = dummy
 # reference_hypoMap_full@assays$RNA@meta.features <- as.data.frame(dummy[,-1])
-# print(object.size(reference_hypoMap_full) / 1000000)
 #
-# ## downsample:
-# ## source("/beegfs/scratch/bruening_scratch/lsteuernagel/projects/scHarmonize/utils.R") or See function below!!!!
-# cluster_downsample = downsample_balanced_iterative(reference_hypoMap_full@meta.data,target_sample_size = 20000,predictor_var = "Curated_CellType",
-#                                                    stepsize = 500,global_seed = 12345)
-# table(cluster_downsample$Curated_CellType)
-#
-# reference_hypoMap_full = subset(reference_hypoMap_full,cells = cluster_downsample$Cell_ID)
-# print(object.size(reference_hypoMap_full) / 1000000)
+# # remove some metadata to make the object smaller
+# temp_meta = reference_hypoMap_full@meta.data
+# temp_meta = temp_meta %>% dplyr::select(Cell_ID,Dataset,Batch_ID,Technology,inferred_sex,nFeature_RNA,nCount_RNA,rpl_signature_expr_median,
+#                                         Age,Diet,Subregion,Curated_Class,Curated_CellType,Author_CellType)
+# rownames(temp_meta) = temp_meta$Cell_ID
+# reference_hypoMap_full@meta.data = temp_meta
 #
 # # save
-# save(reference_hypoMap_full,file = "/beegfs/scratch/bruening_scratch/lsteuernagel/projects/mapscvi/data/reference_hypoMap_full.RData")
+# save(reference_hypoMap_full,file = "/beegfs/scratch/bruening_scratch/lsteuernagel/projects/mapscvi/data/reference_hypoMap_full.RData",compress="xz",compression_level = "9")
 #
 # # set model
 # model_path = "/beegfs/scratch/bruening_scratch/lsteuernagel/data/hypoMap/hypoMap_models/scVI_hypothalamus_full_map_model/"
@@ -83,7 +81,7 @@
 # #####
 #
 # ## load romanov query
-#suffix ="mapped_data_yeo_romanov" # a name
+# suffix ="mapped_data_yeo_romanov" # a name
 # query_romanov_path = "/beegfs/scratch/bruening_scratch/lsteuernagel/data/scHarmonize/hypothalamusMapNeurons_v4/harmonization_results/hypothalamus_neurons_reference/mapped_data_Romanov_neurons/mapped_data_Romanov_neurons.h5Seurat" # seurat object to load
 # query_romanov = SeuratDisk::LoadH5Seurat(query_romanov_path)
 # query_romanov@reductions = list()
