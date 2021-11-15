@@ -64,8 +64,13 @@ names(query_romanov@reductions)
 To map data to the reference HypoMap, we use the HypoMap model and a reduced reference seurat object with only relevant information and fewer cell.
 The model and reference seurat for neighbor search and umap construction will automatically be used when setting the reference_mode to "hypoMap_neurons" or  "hypoMap_full" in the wrapper function below.
 
-```{r echo=FALSE, message=FALSE, warning=FALSE, results = 'hide'}
+```{r echo=TRUE, message=FALSE, warning=FALSE, results = 'hide'}
 query_romanov_neurons = mapscvi::map_new_seurat_hypoMap(mapscvi::query_romanov,reference_mode = "hypoMap_neurons", suffix="query_romanov_neurons",max_epochs=20)
+```
+
+After successful mapping the objects contains the scvi and umap reductions:
+
+```{r}
 names(query_romanov_neurons@reductions)
 ```
 
@@ -101,14 +106,14 @@ Seurat::FeaturePlot(query_romanov_neurons,features = "prediction_probability")+S
 
 While here we started directly by embedding data onto the neruon map typical worflow would start by embedding data first onto the full map with all celltypes and then afterwards only take the predicted neurons to map onto the reference map
 
-```{r}
+```{r, message=FALSE, warning=FALSE, results = 'hide'}
 # mapscvi::query_romanov was already subset to neurons which is why this step does not make much sense for this example data
 query_romanov_full = mapscvi::map_new_seurat_hypoMap(mapscvi::query_romanov,reference_mode = "hypoMap_full",label_col = "Curated_Class", suffix="query_romanov_full",max_epochs=20)
 query_romanov_full@meta.data$predicted_class = query_romanov_full@meta.data$predicted
 ```
 
 
-```{r}
+```{r, message=FALSE, warning=FALSE, results = 'hide'}
 # similar to example above
 query_romanov_neurons = mapscvi::map_new_seurat_hypoMap(query_romanov_full, reference_mode = "hypoMap_neurons", suffix="query_romanov_neurons",max_epochs=20,subset_col = "predicted_class", subset_values = "Neurons")
 names(query_romanov_neurons@reductions)
@@ -160,7 +165,7 @@ Then we can calculate nearest neighbors and UMAP based on the reference. Additio
 
 To propagate labels with the project_query function we can provide a vector of the same length as the reference cells (and same order!). Preferably this is a column from the metadata of the reference seurat object.
 
-```{r message=TRUE, warning=TRUE, results = 'hide'}
+```{r, message=FALSE, warning=FALSE, results = 'hide'}
 cluster_labels = mapscvi::reference_hypoMap_neurons@meta.data$K169_named
 reference_reduction = "scvi"
 lamanno_seurat_object = project_query(query_seurat_object = lamanno_seurat_object,

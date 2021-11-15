@@ -65,6 +65,18 @@ cell. The model and reference seurat for neighbor search and umap
 construction will automatically be used when setting the reference\_mode
 to “hypoMap\_neurons” or “hypoMap\_full” in the wrapper function below.
 
+``` r
+query_romanov_neurons = mapscvi::map_new_seurat_hypoMap(mapscvi::query_romanov,reference_mode = "hypoMap_neurons", suffix="query_romanov_neurons",max_epochs=20)
+```
+
+After successful mapping the objects contains the scvi and umap
+reductions:
+
+``` r
+names(query_romanov_neurons@reductions)
+#> [1] "scvi"      "umap_scvi"
+```
+
 #### Plotting results:
 
 We can take a look at the top clusters that were found in the query:
@@ -96,7 +108,7 @@ wrapper above.
 plot_query_labels(query_seura_object=query_romanov_neurons,reference_seurat=mapscvi::reference_hypoMap_neurons,label_col="K169_named",overlay = FALSE,labelonplot = FALSE)
 ```
 
-<img src="man/figures/README-unnamed-chunk-7-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-8-1.png" width="100%" />
 
 Overlay them query over the reference. The overlay parameters allow to
 change the behavior of query points. We can use the Seurat::DimPlot
@@ -109,7 +121,7 @@ plot_query_labels(query_seura_object=query_romanov_neurons,reference_seurat=maps
 #> which will replace the existing scale.
 ```
 
-<img src="man/figures/README-unnamed-chunk-8-1.png" width="100%" /> The
+<img src="man/figures/README-unnamed-chunk-9-1.png" width="100%" /> The
 mapping also returns a prediction probability based on the similarity to
 the the neighbors in there reference which an indicate how well
 different cells mapped to their assigned celltypes.
@@ -118,7 +130,7 @@ different cells mapped to their assigned celltypes.
 Seurat::FeaturePlot(query_romanov_neurons,features = "prediction_probability")+Seurat::NoAxes()
 ```
 
-<img src="man/figures/README-unnamed-chunk-9-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-10-1.png" width="100%" />
 
 ## Note on subsetting and full HypoMap
 
@@ -130,95 +142,13 @@ to map onto the reference map
 ``` r
 # mapscvi::query_romanov was already subset to neurons which is why this step does not make much sense for this example data
 query_romanov_full = mapscvi::map_new_seurat_hypoMap(mapscvi::query_romanov,reference_mode = "hypoMap_full",label_col = "Curated_Class", suffix="query_romanov_full",max_epochs=20)
-#> Setting reference_mode to 'hypoMap_full'.
-#> Normalizing data
-#> Batch variable 'Batch_ID' not found. Adding with value 'query_romanov_full_batch_1'
-#> Variable 'inferred_sex' not found. Adding to data'
-#> Found 'Sex' annotation. Using custom procedure to compare with Xist expression
-#> Variable 'rpl_signature_expr_median' not found. Adding to data.
-#> Warning in Seurat::FetchData(query_seurat_object, vars = rpl_signature): The
-#> following requested variables were not found (10 out of 11 shown): Rpl26, Rps26-
-#> ps1, Rps18-ps3, Rpl9-ps6, Rps12-ps3, Rpl36-ps3, Rpl13-ps3, Rpl23a-ps3, Rpl6l,
-#> Rpl27-ps3
-#> Matrix for anndata dim 1000 845
-#> Warning: The following arguments are not used: row.names
-#> Warning: Overwriting previous file /tmp/RtmpVsxlpEtemp_query.h5Seurat
-#> Creating h5Seurat file for version 3.1.5.9900
-#> Adding counts for RNA
-#> Adding data for RNA
-#> No variable features found for RNA
-#> No feature-level metadata found for RNA
-#> Validating h5Seurat file
-#> Warning: Keys should be one or more alphanumeric characters followed by an
-#> underscore, setting key from scvi to scvi_
-#> Warning: All keys should be one or more alphanumeric characters followed by an
-#> underscore '_', setting key to scvi_
-#> 2021-11-15 13:43:29: Project UMAP..
-#> Computing nearest neighbors
-#> Warning: The following arguments are not used: seed_use, return.neighbor
-#> Running UMAP projection
-#> 13:44:06 Read 845 rows
-#> 13:44:06 Processing block 1 of 1
-#> 13:44:06 Commencing smooth kNN distance calibration using 1 thread
-#> 13:44:06 Initializing by weighted average of neighbor coordinates using 1 thread
-#> 13:44:06 Commencing optimization for 67 epochs, with 25350 positive edges
-#> 13:44:06 Finished
-#> Warning: No assay specified, setting assay as RNA by default.
-#> 2021-11-15 13:44:06: Add results to Seurat..
-#> Warning: Keys should be one or more alphanumeric characters followed by an
-#> underscore, setting key from umap_scvi to umapscvi_
-#> Warning: All keys should be one or more alphanumeric characters followed by an
-#> underscore '_', setting key to umapscvi_
-#> 2021-11-15 13:44:06: Predict labels...
-#> Estimate probabilities
-#> Estimate entropy
-#> Found query_ref_nn
-#> Calculating average distances ...
 query_romanov_full@meta.data$predicted_class = query_romanov_full@meta.data$predicted
 ```
 
 ``` r
 # similar to example above
 query_romanov_neurons = mapscvi::map_new_seurat_hypoMap(query_romanov_full, reference_mode = "hypoMap_neurons", suffix="query_romanov_neurons",max_epochs=20,subset_col = "predicted_class", subset_values = "Neurons")
-#> Setting reference_mode to 'hypoMap_neurons'.
-#> Subsetting query object to 844 cells from 845 cells
-#> Normalizing data
-#> Matrix for anndata dim 750 844
-#> Warning: The following arguments are not used: row.names
-#> Warning: Overwriting previous file /tmp/RtmpVsxlpEtemp_query.h5Seurat
-#> Creating h5Seurat file for version 3.1.5.9900
-#> Adding counts for RNA
-#> Adding data for RNA
-#> No variable features found for RNA
-#> No feature-level metadata found for RNA
-#> Validating h5Seurat file
-#> Warning: Keys should be one or more alphanumeric characters followed by an
-#> underscore, setting key from scvi to scvi_
-#> Warning: All keys should be one or more alphanumeric characters followed by an
-#> underscore '_', setting key to scvi_
-#> 2021-11-15 13:44:22: Project UMAP..
-#> Computing nearest neighbors
-#> Warning: The following arguments are not used: seed_use, return.neighbor
-#> Running UMAP projection
-#> 13:44:42 Read 844 rows
-#> 13:44:42 Processing block 1 of 1
-#> 13:44:42 Commencing smooth kNN distance calibration using 1 thread
-#> 13:44:42 Initializing by weighted average of neighbor coordinates using 1 thread
-#> 13:44:42 Commencing optimization for 67 epochs, with 25320 positive edges
-#> 13:44:42 Finished
-#> Warning: No assay specified, setting assay as RNA by default.
-#> 2021-11-15 13:44:42: Add results to Seurat..
-#> Warning: Keys should be one or more alphanumeric characters followed by an
-#> underscore, setting key from umap_scvi to umapscvi_
-#> Warning: All keys should be one or more alphanumeric characters followed by an
-#> underscore '_', setting key to umapscvi_
-#> 2021-11-15 13:44:42: Predict labels...
-#> Estimate probabilities
-#> Estimate entropy
-#> Found query_ref_nn
-#> Calculating average distances ...
 names(query_romanov_neurons@reductions)
-#> [1] "scvi"      "umap_scvi"
 ```
 
 ## Detailed walkthrough
@@ -310,27 +240,6 @@ lamanno_seurat_object = project_query(query_seurat_object = lamanno_seurat_objec
                                       reference_map_umap = mapscvi::reference_hypoMap_neurons@reductions[[paste0("umap_",reference_reduction)]],
                                       query_reduction = "scvi",
                                       label_vec =cluster_labels)
-#> 2021-11-15 13:44:59: Project UMAP..
-#> Computing nearest neighbors
-#> Warning: The following arguments are not used: seed_use, return.neighbor
-#> Running UMAP projection
-#> 13:45:22 Read 243 rows
-#> 13:45:22 Processing block 1 of 1
-#> 13:45:22 Commencing smooth kNN distance calibration using 1 thread
-#> 13:45:22 Initializing by weighted average of neighbor coordinates using 1 thread
-#> 13:45:22 Commencing optimization for 67 epochs, with 7290 positive edges
-#> 13:45:22 Finished
-#> Warning: No assay specified, setting assay as RNA by default.
-#> 2021-11-15 13:45:22: Add results to Seurat..
-#> Warning: Keys should be one or more alphanumeric characters followed by an
-#> underscore, setting key from umap_scvi to umapscvi_
-#> Warning: All keys should be one or more alphanumeric characters followed by an
-#> underscore '_', setting key to umapscvi_
-#> 2021-11-15 13:45:22: Predict labels...
-#> Estimate probabilities
-#> Estimate entropy
-#> Found query_ref_nn
-#> Calculating average distances ...
 ```
 
 This can then be used to plot the results side-by side:
@@ -339,7 +248,7 @@ This can then be used to plot the results side-by side:
 plot_query_labels(query_seura_object=lamanno_seurat_object,reference_seurat=mapscvi::reference_hypoMap_neurons,label_col="K169_named",overlay = FALSE,labelonplot = FALSE)
 ```
 
-<img src="man/figures/README-unnamed-chunk-18-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-19-1.png" width="100%" />
 
 Or with overlay:
 
@@ -349,7 +258,7 @@ plot_query_labels(query_seura_object=lamanno_seurat_object,reference_seurat=maps
 #> which will replace the existing scale.
 ```
 
-<img src="man/figures/README-unnamed-chunk-19-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-20-1.png" width="100%" />
 This obviously didn’t work out very well.
 
 Most cells were mapped to the same celltype in the middle of the UMAP,
@@ -382,7 +291,7 @@ celltype was unambiguously mapped.
 Seurat::FeaturePlot(lamanno_seurat_object,features = "prediction_probability")+Seurat::NoAxes()
 ```
 
-<img src="man/figures/README-unnamed-chunk-21-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-22-1.png" width="100%" />
 
 We can see that the left blob (mostly neurons) has relatively low
 quality, probably due to the fact that they have mixed celltypes as
@@ -444,7 +353,7 @@ visualize on the umap:
 Seurat::FeaturePlot(lamanno_seurat_object,features = "marker_pct")+Seurat::NoAxes()
 ```
 
-<img src="man/figures/README-unnamed-chunk-25-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-26-1.png" width="100%" />
 This confirms the observations from the neighbor based
 prediction\_probability. The outlier cells from the
 ‘Slc6a3.Fam159b.Satb2.HY1’ cluster have a very low percentage of
