@@ -15,6 +15,6 @@ query_romanov
 }
 \description{
 Manually curated data as ax example datasets for mapping new data.
-Comapred to the full smart-seq datasets this dataset is already reduced to potential neurons to demonstrate mapping on the neuron map in the readme!
+Compared to the full smart-seq datasets this dataset is already reduced to potential neurons to demonstrate mapping on the neuron map in the readme!
 }
 \keyword{datasets}

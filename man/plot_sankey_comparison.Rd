@@ -8,10 +8,12 @@ plot_sankey_comparison(
   input_clusters,
   clustering_1_filter = NULL,
   clustering_2_filter = NULL,
+  use_and = FALSE,
   value_col = "n",
   text_size = 10,
   col1 = "#cc2118",
   col2 = "#302ac9",
+  light_factor = 0.5,
   return_data = FALSE
 )
 }
@@ -22,6 +24,8 @@ plot_sankey_comparison(
 
 \item{clustering_2_filter}{character vector, which clusters to filter on}
 
+\item{use_and}{when two clustering are given: Use logical AND or OR to decide which ones to use in sankey. OR potentially adds additional clusters}
+
 \item{value_col}{string, column name that specifies values of connection size in sankey}
 
 \item{text_size}{numeric, font size in sankey}
@@ -29,6 +33,8 @@ plot_sankey_comparison(
 \item{col1}{string, color name for clustering_1}
 
 \item{col2}{string, color name for clustering_2}
+
+\item{light_factor}{when additional clusters are added to the sankey, their color can be shown as a lighter (or darker version) of col1 or 2. set to something between 0 and 0.6}
 
 \item{return_data}{return list with nodes and edges instead of plotting sankey}
 }

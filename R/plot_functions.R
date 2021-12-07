@@ -403,17 +403,19 @@ visNetwork_clustering = function(query_seura_object,clustering_1,clustering_2,mi
 #' @param input_clusters edgelist-like dataframe with first two clusters containing ids of clusters
 #' @param clustering_1_filter character vector, which clusters to filter on
 #' @param clustering_2_filter character vector, which clusters to filter on
+#' @param use_and when two clustering are given: Use logical AND or OR to decide which ones to use in sankey. OR potentially adds additional clusters
 #' @param value_col string, column name that specifies values of connection size in sankey
 #' @param text_size numeric, font size in sankey
 #' @param col1 string, color name for clustering_1
 #' @param col2 string, color name for clustering_2
+#' @param light_factor when additional clusters are added to the sankey, their color can be shown as a lighter (or darker version) of col1 or 2. set to something between 0 and 0.6
 #' @param return_data return list with nodes and edges instead of plotting sankey
 #'
 #' @return ggtree object or plot
 #'
 #' @export
 #'
-#' @import SeuratObject Seurat cowplot ggplot2
+#' @import SeuratObject Seurat cowplot ggplot2 colorspace
 #'
 #' @examples
 #'
@@ -427,7 +429,7 @@ visNetwork_clustering = function(query_seura_object,clustering_1,clustering_2,mi
 # clustering_1_filter = NULL
 # clustering_2_filter = c("40","32","0")
 
-plot_sankey_comparison = function(input_clusters,clustering_1_filter = NULL,clustering_2_filter = NULL,value_col="n",text_size=10,col1="#cc2118",col2="#302ac9",return_data=FALSE){
+plot_sankey_comparison = function(input_clusters,clustering_1_filter = NULL,clustering_2_filter = NULL, use_and =FALSE,value_col="n",text_size=10,col1="#cc2118",col2="#302ac9", light_factor = 0.5,return_data=FALSE){
 
   # optional use of packages:
   if (!requireNamespace("networkD3", quietly = TRUE)) {
@@ -446,7 +448,11 @@ plot_sankey_comparison = function(input_clusters,clustering_1_filter = NULL,clus
   }
   # make edges
   if(!is.null(clustering_1_filter) & !is.null(clustering_2_filter)){
-    sankey_edges = input_clusters %>% dplyr::filter(clustering_1 %in% clustering_1_filter | clustering_2 %in% clustering_2_filter)
+    if(!use_and){
+      sankey_edges = input_clusters %>% dplyr::filter(clustering_1 %in% clustering_1_filter | clustering_2 %in% clustering_2_filter)
+    }else{
+      sankey_edges = input_clusters %>% dplyr::filter(clustering_1 %in% clustering_1_filter & clustering_2 %in% clustering_2_filter)
+    }
   }else if(!is.null(clustering_1_filter)){
     sankey_edges = input_clusters %>% dplyr::filter(clustering_1 %in% clustering_1_filter)
   }else{
@@ -454,12 +460,27 @@ plot_sankey_comparison = function(input_clusters,clustering_1_filter = NULL,clus
   }
   # nodes
   sankey_nodes <- data.frame(name=c(as.character(sankey_edges$clustering_1),as.character(sankey_edges$clustering_2)) %>% unique())
+  # add group for coloring
   sankey_nodes$group = "clustering_1"
+  sankey_nodes$group[sankey_nodes$name %in% input_clusters$clustering_1 & !sankey_nodes$name %in% clustering_1_filter] = "clustering_1_added"
   sankey_nodes$group[sankey_nodes$name %in% input_clusters$clustering_2] = "clustering_2"
+  sankey_nodes$group[sankey_nodes$name %in% input_clusters$clustering_2 & !sankey_nodes$name %in% clustering_2_filter] = "clustering_2_added"
+
+  #edges update
   sankey_edges = as.data.frame(sankey_edges)
   # With networkD3, connection must be provided using id, not using real name like in the links dataframe.. So we need to reformat it.
   sankey_edges$IDsource <- match(sankey_edges$clustering_1, sankey_nodes$name)-1
   sankey_edges$IDtarget <- match(sankey_edges$clustering_2, sankey_nodes$name)-1
+
+  ## create lighter color version using colorspace
+  color_vector = c(col1,col2)
+  color_vector_space <- colorspace::readhex(file = textConnection(paste(color_vector, collapse = "\n")),class = "RGB")
+  #transform to hue/lightness/saturation colorspace
+  color_vector_space <- as(color_vector_space, "HLS")
+  #additive increase of lightness
+  color_vector_space@coords[, "L"] <- pmax(0, color_vector_space@coords[, "L"] + light_factor)
+  # make lighter hex version
+  color_vector_lighter <- colorspace::hex(color_vector_space)
 
   # return
   if(return_data){
@@ -469,8 +490,9 @@ plot_sankey_comparison = function(input_clusters,clustering_1_filter = NULL,clus
     p <- networkD3::sankeyNetwork(Links = sankey_edges, Nodes = sankey_nodes,
                                   Source = "IDsource", Target = "IDtarget",
                                   Value = value_col, NodeID = "name",NodeGroup = "group",
-                                  colourScale = networkD3::JS(paste0('d3.scaleOrdinal() .domain(["clustering_1","clustering_2"]) .range(["',col1,'","',col2,'"]);')),
-                                  sinksRight=FALSE,fontSize=text_size)
+                                  colourScale = networkD3::JS(paste0("d3.scaleOrdinal() .domain([\"clustering_1\",\"clustering_2\",\"clustering_1_added\",\"clustering_2_added\"]) .range([\"",
+                                                                     col1, "\",\"", col2,"\",\"", color_vector_lighter[1],"\",\"", color_vector_lighter[2], "\"]);")),
+                                  sinksRight = FALSE, fontSize = text_size)
     p
   }
 
