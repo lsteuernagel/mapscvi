@@ -9,7 +9,7 @@ recursive_reconstruction(edgelist, input_annotation)
 \arguments{
 \item{edgelist}{dataframe or matrix with two columns (edgelist: to and from). optional third column giving the 'level' of 'from' which will be used to determine reconstructed levels and name columns}
 
-\item{input_annotation}{query project name. defaults to 'query'}
+\item{input_annotation}{a vector of labels (per cell). higher level annotations will constrcuted from this}
 }
 \value{
 matrix with columns for input_annotation and all clustering levels (above) in edgelist

@@ -49,7 +49,7 @@ plot_query_labels = function(query_seura_object,reference_seurat,label_col,label
     # extract data for overlay from query
     plot_data = cbind(query_seura_object@reductions[[query_umap]]@cell.embeddings,query_seura_object@meta.data)
     # plot reference UMAP
-    p_full=DimPlot(reference_seurat,group.by = label_col,reduction = reference_umap,label = labelonplot,...)
+    p_full=Seurat::DimPlot(reference_seurat,group.by = label_col,reduction = reference_umap,label = labelonplot, raster = FALSE,...)
     # save and remove geom_text layer
     if(labelonplot){
       save_geom_text = p_full$layers[[2]]
@@ -58,7 +58,7 @@ plot_query_labels = function(query_seura_object,reference_seurat,label_col,label
     # recreate plot if all points are bg col
     if(!is.null(bg_col)){
       reference_seurat$dummy = NA
-      p_full=DimPlot(reference_seurat,group.by = "dummy")+scale_color_manual(values = bg_col,na.value=bg_col)+NoLegend()
+      p_full=Seurat::DimPlot(reference_seurat,group.by = "dummy", raster = FALSE)+scale_color_manual(values = bg_col,na.value=bg_col)+NoLegend()
     }
     if(noaxes){p_full = p_full+Seurat::NoAxes()}
     if(nolegend){ p_full = p_full+Seurat::NoLegend()}
@@ -75,7 +75,7 @@ plot_query_labels = function(query_seura_object,reference_seurat,label_col,label
       # if bg color is set we are plotting the color with the query points
       # do the label_col and label_col query overlap ? then use color scale from reference
       if(length(intersect(unique(query_seura_object@meta.data[,label_col_query]),unique(reference_seurat@meta.data[,label_col])))>0){
-        test_plot = DimPlot(reference_seurat,group.by = label_col,reduction = reference_umap) # testplot from full data
+        test_plot = DimPlot(reference_seurat,group.by = label_col,reduction = reference_umap, raster = FALSE) # testplot from full data
         testplot_build=ggplot_build(test_plot)$data[1][[1]] # dataframe with colors
         color_mapping_df=as.data.frame(cbind(testplot_build[,"colour"],reference_seurat@meta.data[,c(label_col)])) %>% dplyr::distinct(V1,V2) # make a df with label_col and colours
         color_mapping <- as.character(color_mapping_df$V1) # convert to a named vector for scale_color_manual
@@ -102,14 +102,14 @@ plot_query_labels = function(query_seura_object,reference_seurat,label_col,label
     # side-by-side
     xlims = c(min(reference_seurat@reductions[[reference_umap]]@cell.embeddings[,1])-0.5,max(reference_seurat@reductions[[reference_umap]]@cell.embeddings[,1])+0.5)
     ylims = c(min(reference_seurat@reductions[[reference_umap]]@cell.embeddings[,2])-0.5,max(reference_seurat@reductions[[reference_umap]]@cell.embeddings[,2])+0.5)
-    p1 = Seurat::DimPlot(reference_seurat,group.by = label_col,reduction = reference_umap,label = labelonplot,...)+xlim(xlims)+ylim(ylims)
+    p1 = Seurat::DimPlot(reference_seurat,group.by = label_col,reduction = reference_umap,label = labelonplot, raster = FALSE,...)+xlim(xlims)+ylim(ylims)
     # get pt size
     if(is.null(query_pt_size)){
       pt_size = p1[[1]]$layers[[1]]$aes_params$size
     }else{
       pt_size = query_pt_size
     }
-    p2 = Seurat::DimPlot(query_seura_object,group.by = label_col_query,reduction = query_umap,label = labelonplot,pt.size = pt_size,...)+xlim(xlims)+ylim(ylims)
+    p2 = Seurat::DimPlot(query_seura_object,group.by = label_col_query,reduction = query_umap,label = labelonplot,pt.size = pt_size, raster = FALSE,...)+xlim(xlims)+ylim(ylims)
     if(noaxes){
       p1 = p1+Seurat::NoAxes()
       p2 = p2+Seurat::NoAxes()
