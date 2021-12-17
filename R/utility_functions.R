@@ -60,7 +60,7 @@ reconstruct_levels = function(edgelist,input_annotation,level_prefix="K[0-9]+",r
 #' Recursively go through edgelist and reconstruct higher-level annotation of input_annotation
 #'
 #' @param edgelist dataframe or matrix with two columns (edgelist: to and from). optional third column giving the 'level' of 'from' which will be used to determine reconstructed levels and name columns
-#' @param input_annotation query project name. defaults to 'query'
+#' @param input_annotation a vector of labels (per cell). higher level annotations will constrcuted from this
 #'
 #' @return matrix with columns for input_annotation and all clustering levels (above) in edgelist
 #'
