@@ -281,7 +281,7 @@ adjusted_cell_probabilities = function(dist_Nc,labels_of_neighbor,with_euclidean
   }else{
     if(result_type == "label"){
       # step 5: uncertainty score: 1 - prob_label --> I rather return directly the highest label with its name
-      return(label_probabilities[label_probabilities == max(label_probabilities)])
+      return(label_probabilities[label_probabilities == max(label_probabilities)][1])
     }else if(result_type == "entropy"){
       # step 6: try out entropy:
       ## entropy helper:
@@ -347,7 +347,9 @@ propagate_labels_prob = function(neighbors_object=NULL,label_vec,query_seurat_ob
   },distances = neighbors_object@nn.dist,neighbor_idxs = neighbors_object@nn.idx,labels = label_vec)
 
   # mapping results
-  mapping_results = data.frame(Cell_ID = neighbors_object@cell.names[1:n], predicted = names(max_probabilities), prediction_probability = as.numeric(max_probabilities))
+  mapping_results = data.frame(Cell_ID = neighbors_object@cell.names[1:n],
+                               predicted = names(max_probabilities),
+                               prediction_probability = as.numeric(max_probabilities))
 
   # not super efficient because I apply the function twice ....
   if(add_entropy){
