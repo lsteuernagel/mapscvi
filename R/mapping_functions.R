@@ -29,29 +29,25 @@
 
 # TODO: need to limit cores used by scvi ! (run setup !)
 
-predict_query = function(query_seurat_object,model_path,query_reduction="scvi",max_epochs = 30,assay="RNA",use_reticulate = FALSE,global_seed=12345){
+predict_query = function(query_seurat_object,model_path,query_reduction="scvi",var_names=NULL,max_epochs = 30,assay="RNA",use_reticulate = FALSE,global_seed=12345){
 
   # load the variable feature from modelpath
-  var_features = utils::read.table(paste0(model_path,"var_names.csv"),header = F)$V1
-
-  # export to anndata
-  var_df = data.frame(var_names = rownames(SeuratObject::GetAssayData(query_seurat_object,slot='counts',assay=assay)))
-  rownames(var_df) = var_df$var_names
-  # make a matrix with included variable genes in query
-  included_var_features = intersect(var_features,var_df$var_names)
-  # if I don't subset here, then a bigger anndata will be exported but the library size prior will be estimated correctly (update: no because the original model only used the x var genes to estimate lib size)
-  matrix_for_anndata = as.matrix(SeuratObject::GetAssayData(query_seurat_object,slot='counts',assay=assay)[included_var_features,])
-  # for scvi to work we also need the others: we add them as all zero columns at the end
-  missing_var_features = setdiff(var_features,var_df$var_names)
-  add_matrix = matrix(data = 0,nrow = length(missing_var_features),ncol = ncol(matrix_for_anndata))
-  rownames(add_matrix) = missing_var_features
-  colnames(add_matrix) = colnames(matrix_for_anndata)
-  matrix_for_anndata = rbind(matrix_for_anndata,add_matrix)
-  # make new var_df
-  var_df = data.frame(var_names = rownames(matrix_for_anndata))
-  rownames(var_df) = var_df$var_names
-  message("Matrix for anndata dim ",dim(matrix_for_anndata)[1]," ",dim(matrix_for_anndata)[2])
-
+  if(!is.null(var_names)){
+    # export to anndata
+    var_df = data.frame(var_names = rownames(SeuratObject::GetAssayData(query_seurat_object,slot='counts',assay=assay)))
+    rownames(var_df) = var_df$var_names
+    # make a matrix with included variable genes in query
+    included_var_features = intersect(var_features,var_df$var_names)
+    # if I don't subset here, then a bigger anndata will be exported but the library size prior will be estimated correctly (update: no because the original model only used the x var genes to estimate lib size)
+    matrix_for_anndata = as.matrix(SeuratObject::GetAssayData(query_seurat_object,slot='counts',assay=assay)[included_var_features,])
+    # make new var_df
+    var_df = data.frame(var_names = rownames(matrix_for_anndata))
+    rownames(var_df) = var_df$var_names
+    message("Matrix for anndata dim ",dim(matrix_for_anndata)[1]," ",dim(matrix_for_anndata)[2])
+  }else{
+    matrix_for_anndata = as.matrix(SeuratObject::GetAssayData(query_seurat_object,slot='counts',assay=assay))
+    message("Matrix for anndata dim ",dim(matrix_for_anndata)[1]," ",dim(matrix_for_anndata)[2])
+  }
   ### reticulate code section:
   if(use_reticulate){
 
@@ -72,22 +68,25 @@ predict_query = function(query_seurat_object,model_path,query_reduction="scvi",m
       obs = query_seurat_object@meta.data,
       var = var_df
     )
-    # put raw data in X slot!
+    # put raw data in X slot ??
+
+    # prepare:
+    scvi$model$SCVI$prepare_query_anndata(adata_query, model_path)
+
     # adata_query$X = adata_query$raw$X$copy()
     # load_query_data
     vae_q = scvi$model$SCVI$load_query_data(
       adata = adata_query,
-      reference_model = model_path, # get model directly from disk!
-      inplace_subset_query_vars=TRUE
+      reference_model = model_path
     )
     # train
     message(max_epochs)
     vae_q$train(max_epochs=as.integer(max_epochs),
-                plan_kwargs=list(weight_decay=0.0)
+                plan_kwargs=list(weight_decay=0.0),
+                progress_bar_refresh_rate=0
     ) # use same epochs and weight_decay = 0
-    # results
 
-    #adata_query$obsm["X_scVI"] = vae_q$get_latent_representation() # get laten dim
+    # results
     # get results directly into R dataframe
     scvi_prediction = vae_q$get_latent_representation()
     scvi_prediction = as.matrix(scvi_prediction)
@@ -109,7 +108,7 @@ predict_query = function(query_seurat_object,model_path,query_reduction="scvi",m
 
     # call python script
     output_file = paste0(temp_dir,"predicted_",temp_seurat@project.name,".txt")
-    system(paste0("python3 -u ",system.file("python/map_scvi.py", package = "mapscvi")," ",updated_name," ",model_path," ",output_file," ",max_epochs))
+    system(paste0("python3 -u ",system.file("python/map_scvi2.py", package = "mapscvi")," ",updated_name," ",model_path," ",output_file," ",max_epochs))
     #system(paste0("python3 -u inst/python/map_scvi.py ",updated_name," ",model_path," ",output_file," ",max_epochs))
     # system(paste0("python3 -u python/map_scvi.py ",updated_name," ",model_path," ",output_file," ",max_epochs))
     #system.file("inst/python/map_scvi.py",package = "mapscvi",lib.loc = "/beegfs/scratch/bruening_scratch/lsteuernagel/R/user_lib/x86_64-pc-linux-gnu-library/4.0/mapscvi/")
