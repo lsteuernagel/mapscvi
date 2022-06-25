@@ -25,6 +25,8 @@
 #'
 #' @import SeuratObject Seurat SeuratDisk
 #'
+#' @importFrom data.table fread
+#'
 #' @examples
 
 # TODO: need to limit cores used by scvi ! (run setup !)
@@ -113,10 +115,18 @@ predict_query = function(query_seurat_object,model_path,query_reduction="scvi",v
     # system(paste0("python3 -u python/map_scvi.py ",updated_name," ",model_path," ",output_file," ",max_epochs))
     #system.file("inst/python/map_scvi.py",package = "mapscvi",lib.loc = "/beegfs/scratch/bruening_scratch/lsteuernagel/R/user_lib/x86_64-pc-linux-gnu-library/4.0/mapscvi/")
     # load results into R
-    scvi_prediction = utils::read.table(output_file)
-    scvi_prediction = as.matrix(scvi_prediction)
-    colnames(scvi_prediction) = paste0("scVI_",1:ncol(scvi_prediction))
-    rownames(scvi_prediction) = colnames(matrix_for_anndata)
+    scvi_prediction = data.table::fread(output_file,header = TRUE,data.table = F)
+    #scvi_prediction = as.matrix(scvi_prediction)
+    rownames_x = as.character(scvi_prediction[,1])
+    #print(paste0(rownames_x,collapse = " | "))
+    scvi_prediction = scvi_prediction[,2:ncol(scvi_prediction)]
+    # sensure numeric
+    #scvi_prediction[,apply(scvi_prediction,2,is.character)] <- apply(scvi_prediction[,apply(scvi_prediction,2,is.character)],2, as.numeric)
+    scvi_prediction=as.matrix(apply(scvi_prediction,2,as.numeric))
+    rownames(scvi_prediction) = rownames_x
+    #print(paste0(apply(scvi_prediction,2,is.numeric),collapse = " | "))
+    # colnames(scvi_prediction) = paste0("scVI_",1:ncol(scvi_prediction))
+
 
     # scvi_prediction = ...
   }
@@ -161,7 +171,7 @@ predict_query = function(query_seurat_object,model_path,query_reduction="scvi",v
 #'
 #' @examples
 
-project_query = function(query_seurat_object,reference_map_reduc,reference_map_umap,query_reduction="scvi",assay="RNA",n_neighbors = NULL,
+project_query = function(query_seurat_object,reference_map_reduc,reference_map_umap,query_reduction="scvi",assay="RNA",use_projectUMAP=FALSE,n_neighbors = 30,
                          annoy.metric = "cosine",label_vec =NULL,global_seed=12345){
 
   # TODO: test for umap model (?)
@@ -177,44 +187,108 @@ project_query = function(query_seurat_object,reference_map_reduc,reference_map_u
     # stop()
   }
 
-  ### project query onto umap
-  message(Sys.time(),": Project UMAP.." )
-
   if(is.null(n_neighbors)){n_neighbors=reference_map_umap@misc$model$n_neighbors}
 
-  query_projection = Seurat::ProjectUMAP(
-    query = query_seurat_object@reductions[[query_reduction]],
-    query.dims = 1:ncol(query_seurat_object@reductions[[query_reduction]]@cell.embeddings),
-    reference = reference_map_reduc,
-    reference.dims = 1:ncol(reference_map_reduc@cell.embeddings),
-    k.param = reference_map_umap@misc$model$n_neighbors,
-    n.neighbors = n_neighbors,
-    nn.method = "annoy",
-    n.trees = 50,
-    annoy.metric = annoy.metric,
-    l2.norm = FALSE,
-    seed_use = global_seed,
-    neighbor.name = "query_ref_nn",
-    reduction.model = reference_map_umap,
-    return.neighbor = TRUE
-  )
 
-  message(Sys.time(),": Add results to Seurat.." )
-  # make a new dim red (just to be sure that key and colnames are coherent)
-  query_umap <- Seurat::CreateDimReducObject(
-    embeddings = query_projection$proj.umap@cell.embeddings,
-    loadings = query_projection$proj.umap@feature.loadings,
-    projected = query_projection$proj.umap@feature.loadings.projected,
-    stdev = query_projection$proj.umap@stdev,
-    assay = assay,
-    key = paste0("umap_",query_reduction),
-    jackstraw = query_projection$proj.umap@jackstraw
-  )
-  # add to query seurat
-  query_seurat_object@reductions[[paste0("umap_",query_reduction)]] = query_umap
+  if(use_projectUMAP){
 
-  # also add nn object to seurat
-  query_seurat_object@neighbors[["query_ref_nn"]]=query_projection$query.neighbor
+    ### project query onto umap
+    message(Sys.time(),": Project UMAP using Seurat::ProjectUMAP.." )
+
+    query_projection = Seurat::ProjectUMAP(
+      query = query_seurat_object@reductions[[query_reduction]],
+      query.dims = 1:ncol(query_seurat_object@reductions[[query_reduction]]@cell.embeddings),
+      reference = reference_map_reduc,
+      reference.dims = 1:ncol(reference_map_reduc@cell.embeddings),
+      k.param = reference_map_umap@misc$model$n_neighbors,
+      n.neighbors = n_neighbors,
+      nn.method = "annoy",
+      n.trees = 50,
+      annoy.metric = annoy.metric,
+      l2.norm = FALSE,
+      seed_use = global_seed,
+      neighbor.name = "query_ref_nn",
+      reduction.model = reference_map_umap,
+      return.neighbor = TRUE
+    )
+    # make a new dim red (just to be sure that key and colnames are coherent)
+    query_umap <- Seurat::CreateDimReducObject(
+      embeddings = query_projection$proj.umap@cell.embeddings,
+      loadings = query_projection$proj.umap@feature.loadings,
+      projected = query_projection$proj.umap@feature.loadings.projected,
+      stdev = query_projection$proj.umap@stdev,
+      assay = assay,
+      key = paste0("umap_",query_reduction),
+      jackstraw = query_projection$proj.umap@jackstraw
+    )
+    # add to query seurat
+    query_seurat_object@reductions[[paste0("umap_",query_reduction)]] = query_umap
+
+    # also add nn object to seurat
+    query_seurat_object@neighbors[["query_ref_nn"]]=query_projection$query.neighbor
+
+  }else{
+
+    message(Sys.time(),": Project UMAP using manual uwot_transform.." )
+
+    # extract model from umap reduc
+    model <- Misc(
+      object = reference_map_umap,
+      slot = "model"
+    )
+    # we need to set num_precomputed_nns = 1 to avoid: Error in umap_transform(X = NULL, nn_method = query.neighbor, model = model,  :  Expecting
+    model$num_precomputed_nns = 1
+
+    message(Sys.time(),": Find neighbors in reference.." )
+
+    # run manual neighbor mapping
+    query.neighbor <- FindNeighbors(
+      object = reference_map_reduc@cell.embeddings,
+      query = query_seurat_object@reductions[[query_reduction]]@cell.embeddings,
+      k.param = n_neighbors,
+      nn.method = "annoy",
+      n.trees = 50,
+      annoy.metric = annoy.metric,
+      cache.index = FALSE,
+      index = NULL,
+      return.neighbor = TRUE,
+      l2.norm = FALSE
+    )
+
+    # make a uwot conformable object
+    query.neighbor.uwot = list(idx = query.neighbor@nn.idx, dist = query.neighbor@nn.dist)
+
+    message(Sys.time(),": Run umap_transform.." )
+
+    # this way we can provide a precomputed nn object:
+    transformed_query = umap_transform(
+      X = NULL,
+      nn_method = query.neighbor.uwot,
+      model = model,
+      n_threads = 30,
+      n_epochs = NULL,
+      verbose = F
+    )
+
+    message(Sys.time(),": Add results to Seurat.." )
+
+    # make query dim red
+    query_umap <- Seurat::CreateDimReducObject(
+      embeddings = as.matrix(transformed_query),
+      stdev = as.numeric(apply(transformed_query, 2, stats::sd)),
+      assay = assay,
+      key = paste0("umap_",query_reduction),
+    )
+
+    # add to query seurat
+    query_seurat_object@reductions[[paste0("umap_",query_reduction)]] = query_umap
+
+    # also add nn object to seurat
+    query_seurat_object@neighbors[["query_ref_nn"]]= query.neighbor
+
+  }
+
+  ##
 
   # propagate labels
   if(!is.null(label_vec)){
