@@ -10,7 +10,8 @@ project_query(
   reference_map_umap,
   query_reduction = "scvi",
   assay = "RNA",
-  n_neighbors = NULL,
+  use_projectUMAP = FALSE,
+  n_neighbors = 30,
   annoy.metric = "cosine",
   label_vec = NULL,
   global_seed = 12345
@@ -26,6 +27,8 @@ project_query(
 \item{query_reduction}{key of predicted reduction used for UMAP projection}
 
 \item{assay}{assay name. defaults to RNA}
+
+\item{use_projectUMAP}{whether to use Seurat's projectUMAP  or a manual adaption (circumventing possible problems between Seurat and uwot)}
 
 \item{n_neighbors}{n neighbors passed to ProjectUMAP}
 

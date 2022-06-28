@@ -8,6 +8,7 @@ predict_query(
   query_seurat_object,
   model_path,
   query_reduction = "scvi",
+  var_names = NULL,
   max_epochs = 30,
   assay = "RNA",
   use_reticulate = FALSE,
@@ -20,6 +21,8 @@ predict_query(
 \item{model_path}{path to pretrained scvi model}
 
 \item{query_reduction}{name for reduction}
+
+\item{var_names}{optionally provide features to subset anndata to}
 
 \item{max_epochs}{epochs to train}
 

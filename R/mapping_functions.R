@@ -14,6 +14,7 @@
 #' @param query_seurat_object Seurat object
 #' @param model_path path to pretrained scvi model
 #' @param query_reduction name for reduction
+#' @param var_names optionally provide features to subset anndata to
 #' @param max_epochs epochs to train
 #' @param assay assay name for new prediction and where to find raw counts. defaults to RNA
 #' @param use_reticulate if TRUE: tries to call scvi via reticulate, if FALSE: exports an anndata object to a temp file and then calls a python script to run prediction code using system()
@@ -158,6 +159,7 @@ predict_query = function(query_seurat_object,model_path,query_reduction="scvi",v
 #' @param reference_map_umap reference map UMAP dim_reduc
 #' @param query_reduction key of predicted reduction used for UMAP projection
 #' @param assay assay name. defaults to RNA
+#' @param use_projectUMAP whether to use Seurat's projectUMAP  or a manual adaption (circumventing possible problems between Seurat and uwot)
 #' @param n_neighbors n neighbors passed to ProjectUMAP
 #' @param annoy.metric 'cosine' or 'euclidean'
 #' @param label_vec a vector with labels from reference that will be propagated to query (requires same order as query_reduction!). defaults to NULL (nothing will be propagated). See also 'propagate_labels'
