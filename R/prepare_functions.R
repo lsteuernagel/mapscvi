@@ -131,6 +131,7 @@ prepare_query_hypoMap = function(object,suffix="query",covariates=c(batch_var = 
   # check gene ids
   #if(rownames(query_seurat_object))
 
+  # TODO: this function is mostly outdated!
 
   # add missing variables for hypomap
   batch_var = covariates["batch_var"]

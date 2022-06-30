@@ -17,6 +17,7 @@ plot_query_labels(
   query_umap = "umap_scvi",
   reference_umap = "umap_scvi",
   labelonplot = TRUE,
+  cols_plot = NULL,
   noaxes = TRUE,
   nolegend = TRUE,
   ...
@@ -46,6 +47,8 @@ plot_query_labels(
 \item{reference_umap}{name of reference umap. defaults to "umap_scvi"}
 
 \item{labelonplot}{put labels on plot. defaults to TRUE}
+
+\item{cols_plot}{passed to Seurat::DimPlot cols argument. Defaults to NULL}
 
 \item{noaxes}{don't plot axes on UMAP. defaults to TRUE}
 

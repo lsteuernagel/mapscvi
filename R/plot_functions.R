@@ -22,6 +22,7 @@
 #' @param query_umap name of query umap. defaults to "umap_scvi"
 #' @param reference_umap name of reference umap. defaults to "umap_scvi"
 #' @param labelonplot put labels on plot. defaults to TRUE
+#' @param cols_plot passed to Seurat::DimPlot cols argument. Defaults to NULL
 #' @param noaxes don't plot axes on UMAP. defaults to TRUE
 #' @param nolegend don't plot legend. defaults to TRUE
 #' @param ... additional arguments to Seurat::DimPlot
@@ -36,7 +37,7 @@
 #'
 #'
 
-plot_query_labels = function(query_seura_object,reference_seurat,label_col,label_col_query = "predicted", overlay = FALSE, bg_col = "grey80", overlay_color = "red", overlay_alpha = 0.5,query_pt_size=NULL, query_umap = "umap_scvi",reference_umap="umap_scvi",labelonplot=TRUE,noaxes=TRUE,nolegend=TRUE,...){
+plot_query_labels = function(query_seura_object,reference_seurat,label_col,label_col_query = "predicted", overlay = FALSE, bg_col = "grey80", overlay_color = "red", overlay_alpha = 0.5,query_pt_size=NULL, query_umap = "umap_scvi",reference_umap="umap_scvi",labelonplot=TRUE,cols_plot=NULL,noaxes=TRUE,nolegend=TRUE,...){
 
   # check
   if(is.null(reference_seurat)){stop("Please provide reference seurat with latent space, umap and metadata")}
@@ -75,7 +76,7 @@ plot_query_labels = function(query_seura_object,reference_seurat,label_col,label
       # if bg color is set we are plotting the color with the query points
       # do the label_col and label_col query overlap ? then use color scale from reference
       if(length(intersect(unique(query_seura_object@meta.data[,label_col_query]),unique(reference_seurat@meta.data[,label_col])))>0){
-        test_plot = DimPlot(reference_seurat,group.by = label_col,reduction = reference_umap, raster = FALSE) # testplot from full data
+        test_plot = DimPlot(reference_seurat,group.by = label_col,reduction = reference_umap, raster = FALSE,cols=cols_plot) # testplot from full data
         testplot_build=ggplot_build(test_plot)$data[1][[1]] # dataframe with colors
         color_mapping_df=as.data.frame(cbind(testplot_build[,"colour"],reference_seurat@meta.data[,c(label_col)])) %>% dplyr::distinct(V1,V2) # make a df with label_col and colours
         color_mapping <- as.character(color_mapping_df$V1) # convert to a named vector for scale_color_manual

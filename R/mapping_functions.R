@@ -59,6 +59,10 @@ predict_query = function(query_seurat_object,model_path,query_reduction="scvi",v
       return(NULL)
     }
 
+    # TODO: add checks for python modules like this:
+    #  py_module_available("scipy")
+    # see also: https://rstudio.github.io/reticulate/articles/package.html
+
     # I am following this guide: https://docs.scvi-tools.org/en/stable/user_guide/notebooks/scvi_in_R.html
     pd <- reticulate::import('pandas', convert = FALSE)
     sc <- reticulate::import('scanpy', convert = FALSE)
@@ -169,7 +173,7 @@ predict_query = function(query_seurat_object,model_path,query_reduction="scvi",v
 #'
 #' @export
 #'
-#' @import Seurat SeuratObject
+#' @import Seurat SeuratObject uwot
 #'
 #' @examples
 
@@ -485,6 +489,9 @@ map_new_seurat_hypoMap = function(query_seurat_object,reference_mode = "hypoMap_
                                   label_col="",subset_values=NULL,max_epochs,
                                   reference_seurat=NULL,reference_reduction="scvi",model_path = NULL,inferred_sex_varname = "inferred_sex" ,
                                   use_reticulate = FALSE,global_seed=12345){
+
+  # TODO: this function is mostly outdated!
+
   # evaluate reference_mode
   if(reference_mode == "hypoMap_neurons"){
     message("Setting reference_mode to 'hypoMap_neurons'.") # Please ensure to provide a compatible 'reference_seurat' object!"
