@@ -19,7 +19,7 @@ propagate_labels_prob(
 )
 }
 \arguments{
-\item{neighbors_object}{neighbors-object with reference neighbors of query. If NULL will run neighbor detection between query_seurat_object and reference_seurat_object}
+\item{neighbors_object}{neighbors-object with reference neighbors of query (see SeuratObject). If NULL will run neighbor detection between query_seurat_object and reference_seurat_object. Requires slot nn.idx and nn.dist.}
 
 \item{label_vec}{vector with labels}
 
