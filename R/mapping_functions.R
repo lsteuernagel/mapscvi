@@ -298,20 +298,25 @@ project_query = function(query_seurat_object,reference_map_reduc,reference_map_u
 
   # propagate labels
   if(!is.null(label_vec)){
-    message(Sys.time(),": Predict labels..." )
-    # run label propagation
-    query_seurat_object =propagate_labels_prob(neighbors_object=query_seurat_object@neighbors[["query_ref_nn"]],
-                                               query_seurat_object = query_seurat_object,
-                                               label_vec = label_vec,
-                                               with_euclidean =FALSE,
-                                               add_entropy =TRUE,
-                                               add_to_seurat =TRUE)
-    # additionally run neighbor distances qc
-    query_seurat_object = avg_neighbor_distances(query_seurat_object = query_seurat_object,
-                                                 reference_map_reduc = reference_map_reduc, # reference_map_reduc
-                                                 query_nn = "query_ref_nn",
-                                                 distance.metric=annoy.metric,
-                                                 add_to_seurat=TRUE)
+    if(nrow(reference_map_reduc@cell.embeddings) != length(label_vec)){
+      message("Warning: label vector does not have the same length as reference reduction. Skipping prediction.")
+      # stop()
+    }else{
+      message(Sys.time(),": Predict labels..." )
+      # run label propagation
+      query_seurat_object =propagate_labels_prob(neighbors_object=query_seurat_object@neighbors[["query_ref_nn"]],
+                                                 query_seurat_object = query_seurat_object,
+                                                 label_vec = label_vec,
+                                                 with_euclidean =FALSE,
+                                                 add_entropy =TRUE,
+                                                 add_to_seurat =TRUE)
+      # additionally run neighbor distances qc
+      query_seurat_object = avg_neighbor_distances(query_seurat_object = query_seurat_object,
+                                                   reference_map_reduc = reference_map_reduc, # reference_map_reduc
+                                                   query_nn = "query_ref_nn",
+                                                   distance.metric=annoy.metric,
+                                                   add_to_seurat=TRUE)
+    }
   }
 
   #return
@@ -388,7 +393,7 @@ adjusted_cell_probabilities = function(dist_Nc,labels_of_neighbor,with_euclidean
 #' Cell probabilities similar to scARches algorithm
 #' This function runs per cell
 #'
-#' @param neighbors_object neighbors-object with reference neighbors of query. If NULL will run neighbor detection between query_seurat_object and reference_seurat_object
+#' @param neighbors_object neighbors-object with reference neighbors of query (see SeuratObject). If NULL will run neighbor detection between query_seurat_object and reference_seurat_object. Requires slot nn.idx and nn.dist.
 #' @param label_vec vector with labels
 #' @param query_seurat_object seurat with query data (and a reduction that is projected from reference_seurat_object) to find shared neighbors. NULL by default (not used when neighbors_object is provided)
 #' @param reference_seurat_object seurat to map onto. NULL by default (not used when neighbors_object is provided)
@@ -406,14 +411,27 @@ adjusted_cell_probabilities = function(dist_Nc,labels_of_neighbor,with_euclidean
 
 propagate_labels_prob = function(neighbors_object=NULL,label_vec,query_seurat_object=NULL,reference_seurat_object=NULL,reduction_name_query="scvi",reduction_name_reference="scvi",annoy.metric="cosine",k.param=30, with_euclidean =FALSE, add_entropy =FALSE, add_to_seurat =FALSE){
 
+  if(is.null(label_vec)){stop("Error: Please provide a valid (non NULL) label_vec.")}
+
   # need euclidean distances neighbors
   if(is.null(neighbors_object)){
+    if(ncol(reference_seurat_object) != length(label_vec)){
+      stop("Error: Please provide a label_vec of the same length a cells in reference_seurat_object when calculating a new neighbor object.")
+      # stop()
+    }
+    message("Calculating neighbor object")
     neighbors_object = Seurat::FindNeighbors(reference_seurat_object@reductions[[reduction_name_reference]]@cell.embeddings,
                                              query = query_seurat_object@reductions[[reduction_name_query]]@cell.embeddings,
                                              k.param = k.param, return.neighbor =TRUE,
                                              annoy.metric=annoy.metric)
+  }else{
+    if(class(hajdarovicpredicted_seurat@neighbors$query_ref_nn)[1] != "Neighbor"){
+      stop("Error: Please provide a valid neighbors_object.")
+    }
+    if(max(neighbors_object@nn.idx) > length(label_vec)){
+      stop("Error: Please provide a label_vec of the same length as reference indices in neighbors_object@nn.idx.")
+    }
   }
-
   # apply max prob per cell function
   if(with_euclidean & annoy.metric=="cosine"){message("Warning: Applying gaussian filter after using cosine distance.")}
   message("Estimate probabilities")
