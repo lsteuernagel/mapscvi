@@ -1,38 +1,64 @@
-# #####
-# ## load full map
-# #####
+# # #####
+# # ## load full map
+# # #####
 #
+# library(Seurat)
+# library(tidyverse)
+#
+# #
 # hypoMap_v2_seurat = readRDS("/beegfs/scratch/bruening_scratch/lsteuernagel/data/hypoMap_v2c_final/hypoMap_v2.rds")
 #
 # # # make new seurat object with reduced size
-# reference_hypoMap_full = CreateSeuratObject(full_map_seurat@assays$RNA@counts,project = "HypoMap_reference",meta.data = full_map_seurat@meta.data)
+# reference_hypoMap = CreateSeuratObject(hypoMap_v2_seurat@assays$RNA@counts,project = "HypoMap_reference",meta.data = hypoMap_v2_seurat@meta.data)
 # # add reductions back in
-# reference_hypoMap_full@reductions = full_map_seurat@reductions
+# reference_hypoMap@reductions = hypoMap_v2_seurat@reductions
 # # overwrite counts with empty sparse matrix to save space
-# empty_matrix <- Matrix::sparseMatrix(i = integer(0), j = integer(0), dims = reference_hypoMap_full@assays$RNA@counts@Dim, dimnames = reference_hypoMap_full@assays$RNA@counts@Dimnames)
+# empty_matrix <- Matrix::sparseMatrix(i = integer(0), j = integer(0), dims = reference_hypoMap@assays$RNA@counts@Dim, dimnames = reference_hypoMap@assays$RNA@counts@Dimnames)
 # empty_matrix <- as(empty_matrix, "dgCMatrix")
-# reference_hypoMap_full = SetAssayData(object = reference_hypoMap_full, slot = "counts", new.data = empty_matrix)
-# reference_hypoMap_full = SetAssayData(object = reference_hypoMap_full, slot = "data", new.data = empty_matrix)
+# reference_hypoMap = SetAssayData(object = reference_hypoMap, slot = "counts", new.data = empty_matrix)
+# reference_hypoMap = SetAssayData(object = reference_hypoMap, slot = "data", new.data = empty_matrix)
 # # overwrite other slots with empty dummy matrix
 # dummy=matrix(data = as.numeric())
-# reference_hypoMap_full@assays$RNA@scale.data = dummy
-# reference_hypoMap_full@assays$RNA@meta.features <- as.data.frame(dummy[,-1])
+# reference_hypoMap@assays$RNA@scale.data = dummy
+# reference_hypoMap@assays$RNA@meta.features <- as.data.frame(dummy[,-1])
 #
 # # remove some metadata to make the object smaller
-# temp_meta = reference_hypoMap_full@meta.data
-# temp_meta = temp_meta %>% dplyr::select(Cell_ID,Dataset,Batch_ID,Technology,inferred_sex,nFeature_RNA,nCount_RNA,rpl_signature_expr_median,
-#                                         Age,Diet,Subregion,Curated_Class,Curated_CellType,Author_CellType)
+# #temp_meta = reference_hypoMap@meta.data
+# # temp_meta = temp_meta %>% dplyr::select(Cell_ID,Dataset,Batch_ID,Technology,inferred_sex,nFeature_RNA,nCount_RNA,
+# #                                         Age,Diet,Author_Class_Curated,Region_summarized,Author_CellType,
+# #                                         C2_named,C7_named,C25_named,C66_named,C185_named,C286_named,C465_named)
+#
+# reference_information = reference_hypoMap@meta.data %>% dplyr::distinct(C465,C465_named,C2_named,C7_named,C25_named,C66_named,C185_named,C286_named,Region_summarized)
+# temp_meta = reference_hypoMap@meta.data %>% dplyr::select(Cell_ID,Batch_ID,C465)
 # rownames(temp_meta) = temp_meta$Cell_ID
-# reference_hypoMap_full@meta.data = temp_meta
+# #reference_hypoMap@meta.data = temp_meta
+#
+# reference_list_hypomap = list(
+#   reference_reduction = reference_hypoMap@reductions$scvi,
+#   reference_umap = reference_hypoMap@reductions$umap_scvi,
+#   reference_labels = temp_meta,
+#   reference_information
+# )
+#
+# # ref info
+# save(reference_list_hypomap,
+#      file = "/beegfs/scratch/bruening_scratch/lsteuernagel/projects/mapscvi/data/reference_list_hypomap.RData",
+#      compress="xz",
+#      compression_level = "9")
 #
 # # save
-# save(reference_hypoMap_full,file = "/beegfs/scratch/bruening_scratch/lsteuernagel/projects/mapscvi/data/reference_hypoMap_full.RData",compress="xz",compression_level = "9")
+# save(reference_hypoMap,
+#      file = "/beegfs/scratch/bruening_scratch/lsteuernagel/projects/mapscvi/data/reference_hypoMap.RData",
+#      compress="xz",
+#      compression_level = "9")
 #
 # # set model
-# model_path = "/beegfs/scratch/bruening_scratch/lsteuernagel/data/hypoMap/hypoMap_models/scVI_hypothalamus_full_map_model/"
+# model_path = "/beegfs/scratch/bruening_scratch/lsteuernagel/data/hypoMap"
 # system(paste0("cp -r ",model_path," /beegfs/scratch/bruening_scratch/lsteuernagel/projects/mapscvi/inst/extdata/models/"))
+#
+# load("data/reference_hypoMap.RData")
 
-
+# copie to /beegfs/scratch/bruening_scratch/lsteuernagel/data/hypoMap/hypoMap_v2_objects
 
 # # #####
 # # ## load neuron map

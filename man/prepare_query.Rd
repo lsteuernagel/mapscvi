@@ -8,6 +8,7 @@ prepare_query(
   object,
   suffix = "query",
   metadata = NULL,
+  batch_var = "Batch_ID",
   assay = "RNA",
   subset_col = "",
   subset_values = NULL,
@@ -21,6 +22,8 @@ prepare_query(
 \item{suffix}{query project name. defaults to 'query'}
 
 \item{metadata}{optional metadata data.frame to overwrite default metadata with. rownames must correspond to colnames of object}
+
+\item{batch_var}{the batch_var used in the scvi model}
 
 \item{assay}{which assay from query_seurat_object. defaults to RNA}
 

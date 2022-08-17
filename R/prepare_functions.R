@@ -10,6 +10,7 @@
 #' @param object input object: a Seurat, SingleCellExperiment or matrix-like object containing the raw (non-normalized) counts.
 #' @param suffix query project name. defaults to 'query'
 #' @param metadata optional metadata data.frame to overwrite default metadata with. rownames must correspond to colnames of object
+#' @param batch_var the batch_var used in the scvi model
 #' @param assay which assay from query_seurat_object. defaults to RNA
 #' @param subset_col character value: metadata column in query_seurat_object that will be used to subset data. defaults to ''
 #' @param subset_values character vector: which values from subset_col should be kept. defaults to NULL which will prevent any subsetting
@@ -24,7 +25,7 @@
 #'
 #' @examples
 
-prepare_query = function(object,suffix="query",metadata =NULL,assay="RNA",subset_col="",subset_values=NULL,normalize=TRUE,global_seed=12345){
+prepare_query = function(object,suffix="query",metadata =NULL,batch_var="Batch_ID",assay="RNA",subset_col="",subset_values=NULL,normalize=TRUE,global_seed=12345){
 
   # Convert object to seurat
   if(length(intersect(base::class(object),c("Seurat","SeuratObject")))>0){
@@ -90,6 +91,12 @@ prepare_query = function(object,suffix="query",metadata =NULL,assay="RNA",subset
 
   # add cell id column
   query_seurat_object@meta.data$Cell_ID = rownames(query_seurat_object@meta.data)
+
+  ## check if batch var exists
+  if(!batch_var %in% colnames(query_seurat_object@meta.data)){
+    message("Batch variable '",batch_var,"' not found. Adding with value '",paste0(suffix,"_batch_1"),"'")
+    query_seurat_object@meta.data[,batch_var] = paste0(suffix,"_batch_1")
+  }
 
   ## clean up
   query_seurat_object@project.name = suffix

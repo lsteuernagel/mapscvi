@@ -51,6 +51,7 @@ predict_query = function(query_seurat_object,model_path,query_reduction="scvi",v
     matrix_for_anndata = as.matrix(SeuratObject::GetAssayData(query_seurat_object,slot='counts',assay=assay))
     message("Matrix for anndata dim ",dim(matrix_for_anndata)[1]," ",dim(matrix_for_anndata)[2])
   }
+
   ### reticulate code section:
   if(use_reticulate){
 
@@ -285,6 +286,9 @@ project_query = function(query_seurat_object,reference_map_reduc,reference_map_u
       assay = assay,
       key = paste0("umap_",query_reduction),
     )
+
+    # update cell ids:
+    rownames(query_umap@cell.embeddings) = rownames(query_seurat_object@meta.data)
 
     # add to query seurat
     query_seurat_object@reductions[[paste0("umap_",query_reduction)]] = query_umap
