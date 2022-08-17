@@ -331,7 +331,7 @@ project_query = function(query_seurat_object,reference_map_reduc,reference_map_u
 ### adjusted_cell_probabilities
 ##########
 
-#' Estimate quality of mapped data based on marker genes from reference
+#' Calculate probabilities for labels of neighboring cells
 #'
 #' Cell probabilities similar to scARches algorithm
 #' This function runs per cell.
@@ -392,7 +392,7 @@ adjusted_cell_probabilities = function(dist_Nc,labels_of_neighbor,with_euclidean
 ### propagate_labels_prob
 ##########
 
-#' Estimate quality of mapped data based on marker genes from reference
+#' Propagates cell labels base don provided vector using the nearest neighbors in the reference.
 #'
 #' Cell probabilities similar to scARches algorithm
 #' This function runs per cell
@@ -480,10 +480,10 @@ propagate_labels_prob = function(neighbors_object=NULL,label_vec,query_seurat_ob
 
 
 ##########
-### map_new_seurat
+### map_new_seurat_hypoMap
 ##########
 
-#' Map a query seurat onto a reference
+#' Map a query seurat onto the hypomap reference
 #'
 #' Wrapper functions that executes low level functions to prepare, predict and project new data onto a reference based on an scvi model.
 #' Set reference_mode to either 'hypoMap_neurons' or 'hypoMap_full' to project new data onto hypoMap. Use the parameters for model and reference to specify any custom data and still use this wrapper function.
@@ -507,55 +507,13 @@ propagate_labels_prob = function(neighbors_object=NULL,label_vec,query_seurat_ob
 #'
 #' @examples
 
-map_new_seurat_hypoMap = function(query_seurat_object,reference_mode = "hypoMap_neurons",suffix="query",assay="RNA",subset_col="",
-                                  label_col="",subset_values=NULL,max_epochs,
-                                  reference_seurat=NULL,reference_reduction="scvi",model_path = NULL,inferred_sex_varname = "inferred_sex" ,
+map_new_seurat_hypoMap = function(query_seurat_object,suffix="query",assay="RNA",subset_col="",
+                                  label_col="",subset_values=NULL,max_epochs,model_path = paste0(system.file('extdata/models/scVI_hypothalamus_full_map_model', package = 'mapscvi'),"/"),
+                                  reference_seurat=mapscvi::reference_hypoMap_downsample,reference_reduction="scvi",model_path = NULL,inferred_sex_varname = "inferred_sex" ,
                                   use_reticulate = FALSE,global_seed=12345){
 
-  # TODO: this function is mostly outdated!
-
-  # evaluate reference_mode
-  if(reference_mode == "hypoMap_neurons"){
-    message("Setting reference_mode to 'hypoMap_neurons'.") # Please ensure to provide a compatible 'reference_seurat' object!"
-    # set path to model
-    if(is.null(model_path)){
-      model_path = paste0(system.file('extdata/models/hypothalamus_neurons_reference_model', package = 'mapscvi'),"/")
-    }else{
-      message("Warning: Overwriting default model path used for 'hypoMap_neurons' with custom path specified in model_path. Set model_path to NULL to avoid this behaviour.")
-    }
-    # set reference object
-    if(is.null(reference_seurat)){
-      reference_seurat = mapscvi::reference_hypoMap_neurons
-      reference_reduction = "scvi"
-      inferred_sex_varname = "inferred_sex.x"
-    }else{
-      message("Warning: Overwriting default reference object used for 'hypoMap_neurons' with custom reference specified in reference_seurat. Set reference_seurat to NULL to avoid this behaviour.")
-    }
-    if(label_col == ""){label_col = "K169_named"}
-  }else if(reference_mode == "hypoMap_full"){
-    message("Setting reference_mode to 'hypoMap_full'.") # Please ensure to provide a compatible 'reference_seurat' object!
-    # set path to model
-    if(is.null(model_path)){
-      model_path = paste0(system.file('extdata/models/scVI_hypothalamus_full_map_model', package = 'mapscvi'),"/")
-    }else{
-      message("Warning: Overwriting default model path used for 'hypoMap_full' with custom path specified in model_path. Set model_path to NULL to avoid this behaviour.")
-    }
-    # set reference object
-    if(is.null(reference_seurat)){
-      reference_seurat = mapscvi::reference_hypoMap_full
-      reference_reduction = "scvi"
-      inferred_sex_varname = "inferred_sex"
-    }else{
-      message("Warning: Overwriting default reference object used for 'hypoMap_full' with custom reference specified in reference_seurat. Set reference_seurat to NULL to avoid this behaviour.")
-    }
-    if(label_col == ""){label_col = "Curated_Class"}
-  }else{
-    message("Using custom reference and model provided.")
-  }
-
   # prepare
-  query_seurat_object = prepare_query_hypoMap(query_seurat_object,suffix=suffix,assay=assay,subset_col=subset_col,subset_values=subset_values,normalize=TRUE,
-                                              covariates=c(batch_var = "Batch_ID",inferred_sex = inferred_sex_varname,rpl_signature_expr_median = "rpl_signature_expr_median"),global_seed=global_seed)
+  query_seurat_object = prepare_query(query_seurat_object,suffix=suffix,assay=assay,subset_col=subset_col,subset_values=subset_values,normalize=TRUE,batch_var = "Batch_ID",global_seed=global_seed)
 
   # check if model path is valid:
   if(!file.exists(paste0(model_path,"attr.pkl"))){
