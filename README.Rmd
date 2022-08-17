@@ -65,13 +65,13 @@ To map data to the reference HypoMap, we use the HypoMap model and a reduced ref
 The model and reference seurat for neighbor search and umap construction will automatically be used when setting the reference_mode to "hypoMap_neurons" or  "hypoMap_full" in the wrapper function below.
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE, results = 'hide'}
-query_romanov_neurons = mapscvi::map_new_seurat_hypoMap(mapscvi::query_romanov,suffix="query_romanov_neurons",max_epochs=20)
+query_romanov = mapscvi::map_new_seurat_hypoMap(mapscvi::query_romanov,suffix="query_romanov",label_col = "C66_named",max_epochs=20)
 ```
 
 After successful mapping the objects contains the scvi and umap reductions:
 
 ```{r}
-names(query_romanov_neurons@reductions)
+names(query_romanov@reductions)
 ```
 
 
@@ -80,7 +80,7 @@ names(query_romanov_neurons@reductions)
 We can take a look at the top clusters that were found in the query:
 
 ```{r}
-head(sort(table(query_romanov_neurons@meta.data$predicted),decreasing = TRUE),n = 10)
+head(sort(table(query_romanov@meta.data$predicted),decreasing = TRUE),n = 10)
 ```
 
 The package provides plotting functions to visualize the query cells on the reference:
@@ -88,19 +88,19 @@ The package provides plotting functions to visualize the query cells on the refe
 We can plot query and reference side by side. Here we set labelonplot to False to prevent cluster labels from being plotted and we use the object 'reference_hypoMap_full' that is automatically loaded when using the wrapper above.
 
 ```{r}
-plot_query_labels(query_seura_object=query_romanov_neurons,reference_seurat=mapscvi::reference_hypoMap_downsample,label_col="C66_named",overlay = FALSE,labelonplot = FALSE)
+plot_query_labels(query_seura_object=query_romanov,reference_seurat=mapscvi::reference_hypoMap_downsample,label_col="C66_named",overlay = FALSE,labelonplot = FALSE)
 ```
 
 Overlay them query over the reference. The overlay parameters allow to change the behavior of query points. We can use the Seurat::DimPlot parameters to further adjust the plots. E.g. by decreasing the size of the labels.
 
 ```{r}
-plot_query_labels(query_seura_object=query_romanov_neurons,reference_seurat=mapscvi::reference_hypoMap_downsample,label_col="C66_named",overlay = TRUE,query_pt_size = 0.4,labelonplot = FALSE,label.size=1)
+plot_query_labels(query_seura_object=query_romanov,reference_seurat=mapscvi::reference_hypoMap_downsample,label_col="C66_named",overlay = TRUE,query_pt_size = 0.4,labelonplot = FALSE,label.size=1)
 ```
 
 The mapping also returns a prediction probability based on the similarity to the the neighbors in there reference which an indicate how well different cells mapped to their assigned celltypes.
 
 ```{r}
-Seurat::FeaturePlot(query_romanov_neurons,features = "prediction_probability")+Seurat::NoAxes()
+Seurat::FeaturePlot(query_romanov,features = "prediction_probability")+Seurat::NoAxes()
 ```
 
 
@@ -176,6 +176,7 @@ Most cells were mapped to the same celltype in the middle of the UMAP, which is 
 head(sort(table(lamanno_seurat_object@meta.data$predicted),decreasing = TRUE),n = 10)
 ```
 This is not very suprising because the datasets does not contain hypothalamic neurons, while the nearest neighbor algorithm will still try to find neighbors in the reference.
+Cholinergic neurons are moved to the hypothalamic cholinergic neurons.
 
 #### Quality of mapping results:
 
