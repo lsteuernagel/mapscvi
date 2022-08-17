@@ -2,7 +2,7 @@
 % Please edit documentation in R/mapping_functions.R
 \name{adjusted_cell_probabilities}
 \alias{adjusted_cell_probabilities}
-\title{Estimate quality of mapped data based on marker genes from reference}
+\title{Calculate probabilities for labels of neighboring cells}
 \usage{
 adjusted_cell_probabilities(
   dist_Nc,

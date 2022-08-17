@@ -172,7 +172,9 @@
 # require(scRNAseq)
 # sce_lamanno_da <- LaMannoBrainData(which = "mouse-adult",ensembl=FALSE)
 # object.size(sce_lamanno_da) / 1000000
-# ##save(sce_lamanno_da,file = "/beegfs/scratch/bruening_scratch/lsteuernagel/projects/mapscvi/data/sce_lamanno_da.RData")
+# lamanno_seurat = prepare_query(sce_lamanno_da,suffix="lamanno_da",normalize=TRUE)
+# lamanno_seurat
+# save(lamanno_seurat,file = "/beegfs/scratch/bruening_scratch/lsteuernagel/projects/mapscvi/data/seurat_lamanno_da.RData")
 #
 # #save testdata
 # save(query_romanov,file = "/beegfs/scratch/bruening_scratch/lsteuernagel/projects/mapscvi/data/query_romanov.RData",compress="xz",compression_level = "9")

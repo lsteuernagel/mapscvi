@@ -18,8 +18,6 @@
 #' @export
 #'
 #' @import stringr
-#'
-#' @examples
 
 reconstruct_levels = function(edgelist,input_annotation,level_prefix="K[0-9]+",result_prefix = ""){
 
@@ -65,8 +63,6 @@ reconstruct_levels = function(edgelist,input_annotation,level_prefix="K[0-9]+",r
 #' @return matrix with columns for input_annotation and all clustering levels (above) in edgelist
 #'
 #' @export
-#'
-#' @examples
 
 recursive_reconstruction = function(edgelist,input_annotation){
   current_level = edgelist$level[edgelist$to==input_annotation[1]]
@@ -98,7 +94,6 @@ recursive_reconstruction = function(edgelist,input_annotation){
 #'
 #' @export
 #'
-#' @examples
 
 add_paired_annotation = function(input_annotation,reference_mapping=NULL,reference_annotations=NULL){
 

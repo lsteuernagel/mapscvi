@@ -2,20 +2,20 @@
 % Please edit documentation in R/mapping_functions.R
 \name{map_new_seurat_hypoMap}
 \alias{map_new_seurat_hypoMap}
-\title{Map a query seurat onto a reference}
+\title{Map a query seurat onto the hypomap reference}
 \usage{
 map_new_seurat_hypoMap(
   query_seurat_object,
-  reference_mode = "hypoMap_neurons",
   suffix = "query",
   assay = "RNA",
   subset_col = "",
   label_col = "",
   subset_values = NULL,
   max_epochs,
-  reference_seurat = NULL,
+  model_path = paste0(system.file("extdata/models/scVI_hypothalamus_full_map_model",
+    package = "mapscvi"), "/"),
+  reference_seurat = mapscvi::reference_hypoMap_downsample,
   reference_reduction = "scvi",
-  model_path = NULL,
   inferred_sex_varname = "inferred_sex",
   use_reticulate = FALSE,
   global_seed = 12345
@@ -23,8 +23,6 @@ map_new_seurat_hypoMap(
 }
 \arguments{
 \item{query_seurat_object}{Seurat object}
-
-\item{reference_mode}{directly specify what to use as reference. Possible values are either 'hypoMap_neurons', 'hypoMap_full' or 'manual'. This will set default values for reference_seurat, reference_reduction and model_path that can be overwritten by directly specifying them. Setting this parameter to 'manual' or NULL requires valid entries for the other parameters.}
 
 \item{suffix}{query project name. defaults to 'query'}
 
@@ -38,17 +36,19 @@ map_new_seurat_hypoMap(
 
 \item{max_epochs}{epochs to train}
 
+\item{model_path}{path to pretrained scvi model}
+
 \item{reference_seurat}{reference seurat}
 
 \item{reference_reduction}{name of scvi reduction in reference. Also expect a umap named as 'umap_'reference_reduction}
-
-\item{model_path}{path to pretrained scvi model}
 
 \item{inferred_sex_varname}{variable name for inferred sex that has to correspond to model (will automatically be set when using reference_mode)}
 
 \item{use_reticulate}{if TRUE: tries to call scvi via reticulate, if FALSE: exports an anndata object to a temp file and then calls a python script to run prediction code using system()}
 
 \item{global_seed}{seed}
+
+\item{reference_mode}{directly specify what to use as reference. Possible values are either 'hypoMap_neurons', 'hypoMap_full' or 'manual'. This will set default values for reference_seurat, reference_reduction and model_path that can be overwritten by directly specifying them. Setting this parameter to 'manual' or NULL requires valid entries for the other parameters.}
 }
 \value{
 formatted seurat object

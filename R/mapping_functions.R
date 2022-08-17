@@ -27,12 +27,16 @@
 #' @import SeuratObject Seurat SeuratDisk
 #'
 #' @importFrom data.table fread
-#'
-#' @examples
 
 # TODO: need to limit cores used by scvi ! (run setup !)
 
 predict_query = function(query_seurat_object,model_path,query_reduction="scvi",var_names=NULL,max_epochs = 30,assay="RNA",use_reticulate = FALSE,global_seed=12345){
+
+
+  # check if model path is valid:
+  if(!file.exists(paste0(model_path,"model.pt"))){
+    stop("Error: Please provide a valid model_path to an scvi model at ",model_path)
+  }
 
   # load the variable feature from modelpath
   if(!is.null(var_names)){
@@ -104,7 +108,7 @@ predict_query = function(query_seurat_object,model_path,query_reduction="scvi",v
   }else{ # this version does not use reticulate to execute scvi
 
     # tempfiles - should be the same across the session
-    temp_dir = tempdir()
+    temp_dir = paste0(tempdir(),"/")
 
     # make Seurat from updated matrix
     temp_seurat = SeuratObject::CreateSeuratObject(counts = matrix_for_anndata, meta.data = query_seurat_object@meta.data, project = query_seurat_object@project.name)
@@ -175,10 +179,8 @@ predict_query = function(query_seurat_object,model_path,query_reduction="scvi",v
 #' @export
 #'
 #' @import Seurat SeuratObject uwot
-#'
-#' @examples
 
-project_query = function(query_seurat_object,reference_map_reduc,reference_map_umap,query_reduction="scvi",assay="RNA",use_projectUMAP=FALSE,n_neighbors = 30,
+project_query = function(query_seurat_object,reference_map_reduc,reference_map_umap,query_reduction="scvi",assay="RNA",use_projectUMAP=FALSE,
                          annoy.metric = "cosine",label_vec =NULL,global_seed=12345){
 
   # TODO: test for umap model (?)
@@ -194,8 +196,8 @@ project_query = function(query_seurat_object,reference_map_reduc,reference_map_u
     # stop()
   }
 
-  if(is.null(n_neighbors)){n_neighbors=reference_map_umap@misc$model$n_neighbors}
-
+  #if(is.null(n_neighbors)){n_neighbors=reference_map_umap@misc$model$n_neighbors}
+  n_neighbors=reference_map_umap@misc$model$n_neighbors
 
   if(use_projectUMAP){
 
@@ -268,7 +270,7 @@ project_query = function(query_seurat_object,reference_map_reduc,reference_map_u
     message(Sys.time(),": Run umap_transform.." )
 
     # this way we can provide a precomputed nn object:
-    transformed_query = umap_transform(
+    transformed_query = uwot::umap_transform(
       X = NULL,
       nn_method = query.neighbor.uwot,
       model = model,
@@ -429,7 +431,7 @@ propagate_labels_prob = function(neighbors_object=NULL,label_vec,query_seurat_ob
                                              k.param = k.param, return.neighbor =TRUE,
                                              annoy.metric=annoy.metric)
   }else{
-    if(class(hajdarovicpredicted_seurat@neighbors$query_ref_nn)[1] != "Neighbor"){
+    if(class(neighbors_object)[1] != "Neighbor"){
       stop("Error: Please provide a valid neighbors_object.")
     }
     if(max(neighbors_object@nn.idx) > length(label_vec)){
@@ -504,20 +506,19 @@ propagate_labels_prob = function(neighbors_object=NULL,label_vec,query_seurat_ob
 #' @export
 #'
 #' @import SeuratObject Seurat
-#'
-#' @examples
 
 map_new_seurat_hypoMap = function(query_seurat_object,suffix="query",assay="RNA",subset_col="",
-                                  label_col="",subset_values=NULL,max_epochs,model_path = paste0(system.file('extdata/models/scVI_hypothalamus_full_map_model', package = 'mapscvi'),"/"),
-                                  reference_seurat=mapscvi::reference_hypoMap_downsample,reference_reduction="scvi",model_path = NULL,inferred_sex_varname = "inferred_sex" ,
+                                  label_col="",subset_values=NULL,max_epochs,
+                                  model_path = system.file("extdata/models/hypoMap_harmonized_scVI_model/", package = 'mapscvi'),
+                                  reference_seurat=mapscvi::reference_hypoMap_downsample,reference_reduction="scvi",inferred_sex_varname = "inferred_sex" ,
                                   use_reticulate = FALSE,global_seed=12345){
 
   # prepare
   query_seurat_object = prepare_query(query_seurat_object,suffix=suffix,assay=assay,subset_col=subset_col,subset_values=subset_values,normalize=TRUE,batch_var = "Batch_ID",global_seed=global_seed)
 
   # check if model path is valid:
-  if(!file.exists(paste0(model_path,"attr.pkl"))){
-    stop("Error: Please provide a valid model_path to an scvi model.")
+  if(!file.exists(paste0(model_path,"model.pt"))){
+    stop("Error: Please provide a valid model_path to an scvi model at ",model_path)
   }
   # predict with scvi
   query_seurat_object = predict_query(query_seurat_object,model_path,max_epochs = max_epochs,assay="RNA",global_seed=global_seed)

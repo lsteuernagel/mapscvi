@@ -33,7 +33,3 @@ ggplot or data behind plot
 For example between propagated and original clusters!
 TODO: add description
 }
-\examples{
-
-
-}

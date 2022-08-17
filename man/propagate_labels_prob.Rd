@@ -2,7 +2,7 @@
 % Please edit documentation in R/mapping_functions.R
 \name{propagate_labels_prob}
 \alias{propagate_labels_prob}
-\title{Estimate quality of mapped data based on marker genes from reference}
+\title{Propagates cell labels base don provided vector using the nearest neighbors in the reference.}
 \usage{
 propagate_labels_prob(
   neighbors_object = NULL,

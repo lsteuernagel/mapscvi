@@ -63,7 +63,3 @@ plot
 Is a wrapper around Seurat::DimPlot functions that allows to plot qeury and reference side-by-side or on top of each other
 The overlay parameters allow to change the appearance of query points and the alpha of the reference points.
 }
-\examples{
-
-
-}

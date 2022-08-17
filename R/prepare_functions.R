@@ -22,8 +22,6 @@
 #' @export
 #'
 #' @import Seurat SeuratObject rlang dplyr
-#'
-#' @examples
 
 prepare_query = function(object,suffix="query",metadata =NULL,batch_var="Batch_ID",assay="RNA",subset_col="",subset_values=NULL,normalize=TRUE,global_seed=12345){
 
@@ -127,8 +125,6 @@ prepare_query = function(object,suffix="query",metadata =NULL,batch_var="Batch_I
 #' @export
 #'
 #' @import Seurat SeuratObject rlang dplyr
-#'
-#' @examples
 
 prepare_query_hypoMap = function(object,suffix="query",covariates=c(batch_var = "Batch_ID",inferred_sex = "inferred_sex.x",rpl_signature_expr_median = "rpl_signature_expr_median"),sex_var = "Sex",...){
 
@@ -241,8 +237,7 @@ prepare_query_hypoMap = function(object,suffix="query",covariates=c(batch_var = 
 #' @export
 #'
 #' @import SeuratObject Seurat
-#'
-#' @examples
+
 
 update_gene_names = function(query_seurat_object,reference_seurat_object=NULL,reference_gene_identifiers=NULL,query_species = NULL,reference_species =NULL){
 

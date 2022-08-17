@@ -32,10 +32,7 @@
 #' @export
 #'
 #' @import SeuratObject Seurat cowplot ggplot2
-#'
-#' @examples
-#'
-#'
+
 
 plot_query_labels = function(query_seura_object,reference_seurat,label_col,label_col_query = "predicted", overlay = FALSE, bg_col = "grey80", overlay_color = "red", overlay_alpha = 0.5,query_pt_size=NULL, query_umap = "umap_scvi",reference_umap="umap_scvi",labelonplot=TRUE,cols_plot=NULL,noaxes=TRUE,nolegend=TRUE,...){
 
@@ -83,7 +80,7 @@ plot_query_labels = function(query_seura_object,reference_seurat,label_col,label
         names(color_mapping) <- color_mapping_df$V2
         # add points to plot
         p_full=p_full+ggplot2::geom_point(data=plot_data,ggplot2::aes_string(x=colnames(plot_data)[1],y=colnames(plot_data)[2],color=label_col_query),size=pt_size)+
-          scale_color_manual(values = color_mapping,na.value= bg_col)
+          ggplot2::scale_color_manual(values = color_mapping,na.value= bg_col)
       }else{# if not use default mapping
         p_full=p_full+ggplot2::geom_point(data=plot_data,ggplot2::aes_string(x=colnames(plot_data)[1],y=colnames(plot_data)[2],color=label_col_query),size=pt_size)
       }
@@ -155,10 +152,6 @@ plot_query_labels = function(query_seura_object,reference_seurat,label_col,label
 #' @import Seurat dplyr ggplot2 cowplot stringr
 #'
 #' @importFrom tidyr gather
-#'
-#' @examples
-#'
-#'
 
 plot_propagation_stats = function(query_seura_object,reference_seurat,label_col_query,label_col,ratio_cut=2,text_size=10,plot_abs = FALSE,n_top = 10,ref_col = "#eda09a",query_col = "#9aa9ed",return_data=FALSE){
 
@@ -258,10 +251,6 @@ plot_propagation_stats = function(query_seura_object,reference_seurat,label_col_
 #' @import Seurat dplyr ggplot2 cowplot stringr
 #'
 #' @importFrom igraph graph_from_data_frame components degree
-#'
-#' @examples
-#'
-#'
 
 # test
 # clustering_1 = "predicted_K169_named"
@@ -333,10 +322,6 @@ compare_clustering = function(query_seura_object,clustering_1,clustering_2,min_c
 #' @export
 #'
 #' @import Seurat dplyr ggplot2 cowplot stringr
-#'
-#' @examples
-#'
-#'
 
 visNetwork_clustering = function(query_seura_object,clustering_1,clustering_2,min_cells = 10,min_pct = 0.1,text_size=25,px_height="800px",col1="#cc2118",col2="#302ac9",color_by = NULL,palette = "Set3",return_data=FALSE){
 
@@ -417,10 +402,7 @@ visNetwork_clustering = function(query_seura_object,clustering_1,clustering_2,mi
 #' @export
 #'
 #' @import SeuratObject Seurat cowplot ggplot2 colorspace
-#'
-#' @examples
-#'
-#'
+
 # input_clusters = overview_relevant
 # min_pct = 0.1
 # input_clusters = overview %>% dplyr::filter(pct_clustering_1 > min_pct | pct_clustering_2 > min_pct)

@@ -19,8 +19,6 @@
 #' @export
 #'
 #' @import SeuratObject Seurat dplyr Matrix
-#'
-#' @examples
 
 check_reference_markers_per_cell = function(query_seurat_object,marker_genes,assay="RNA",query_label_col="predicted",min_expr=0,global_seed=12345){
 
@@ -89,8 +87,6 @@ check_reference_markers_per_cell = function(query_seurat_object,marker_genes,ass
 #' @export
 #'
 #' @import SeuratObject Seurat dplyr
-#'
-#' @examples
 
 avg_neighbor_distances = function(neighbors_object=NULL,reference_map_reduc,query_seurat_object=NULL,query_nn = "query_ref_nn",distance.metric="cosine",add_to_seurat=TRUE){
 
@@ -168,8 +164,6 @@ avg_neighbor_distances = function(neighbors_object=NULL,reference_map_reduc,quer
 #' @export
 #'
 #' @import SeuratObject Seurat dplyr
-#'
-#' @examples
 
 check_distance_neighbors = function(query_seurat_object,reference_seurat,reduction_name="scvi",query_nn = "query_ref_nn",reference_nn = "reference_nn",k_param=30,annoy.metric="cosine",global_seed=12345){
 
@@ -239,8 +233,6 @@ check_distance_neighbors = function(query_seurat_object,reference_seurat,reducti
 #' @export
 #'
 #' @import SeuratObject Seurat dplyr
-#'
-#' @examples
 
 check_freq_neighbors = function(query_seurat_object,reference_seurat,reduction_name="scvi",k_param=30,annoy.metric="cosine",global_seed=12345){
 

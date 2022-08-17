@@ -48,7 +48,3 @@ ggplot or data behind plot
 Determines over or und represented clusters
 TODO: add description
 }
-\examples{
-
-
-}

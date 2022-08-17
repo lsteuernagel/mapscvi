@@ -20,18 +20,9 @@
 
 #' Reference object for mapping of new hypothalamus data
 #'
-#' This is a simplified object of the neuron HypoMap, without count values to reduce the size.
+#' This is a simplified and downsampled object of the HypoMap, without count values to reduce the size.
 #'
 #' @format Seurat object with metadata and reductions 'scvi' and 'umap_scvi' including the umap model.
 #'
 #' @source \url{placeholder}
-"reference_hypoMap_neurons"
-
-#' Reference object for mapping of new hypothalamus data
-#'
-#' This is a simplified object of the full HypoMap with all celltypes, without count values to reduce the size.
-#'
-#' @format Seurat object with metadata and reductions 'scvi' and 'umap_scvi' including the umap model.
-#'
-#' @source \url{placeholder}
-"reference_hypoMap_full"
+"reference_hypoMap_downsample"

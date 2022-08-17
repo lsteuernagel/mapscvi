@@ -44,7 +44,3 @@ ggtree object or plot
 \description{
 TODO: add description
 }
-\examples{
-
-
-}
