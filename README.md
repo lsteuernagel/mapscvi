@@ -14,7 +14,9 @@ latent space and reference umap based on seurat.
 Install mapscvi using:
 
 ``` r
-devtools::install_github("lsteuernagel/mapscvi")
+if (!require("remotes", quietly = TRUE))
+    install.packages("remotes")
+remotes::install_github("lsteuernagel/mapscvi")
 ```
 
 In order to use the package python and scvi \>= 0.8, as well as R and
@@ -22,7 +24,7 @@ Seurat \> 4.0.0 are required.
 
 A docker image which comes with a compatible R, Seurat v4, pytorch and
 scvi installation can be found here:
-<https://hub.docker.com/r/lsteuernagel/r_scvi>
+<https://hub.docker.com/r/lsteuernagel/r_scvi_v2/tags>
 
 ## Example
 
