@@ -13,10 +13,10 @@
 #'
 #' From the the La Manno brain data ("mouse-adult") loaded via scRNAseq::LaMannoBrainData.
 #'
-#' @format A SingleCellExperiment object:
+#' @format A Seurat object
 #'
 #' @source \url{https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE76381}
-"sce_lamanno_da"
+"lamanno_seurat"
 
 #' Reference object for mapping of new hypothalamus data
 #'

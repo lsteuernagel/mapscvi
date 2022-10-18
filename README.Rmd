@@ -28,10 +28,18 @@ Install mapscvi using:
 devtools::install_github("lsteuernagel/mapscvi")
 ```
 
-In order to use the package python and scvi >= 0.8, as well as R and Seurat > 4.0.0 are required.
+## Important links:
 
-A docker image which comes with a compatible R, Seurat v4, pytorch and scvi installation can be found here: https://hub.docker.com/r/lsteuernagel/r_scvi 
+In order to use the package python and scvi >= 0.15, as well as R and Seurat > 4.0.0 are required.
 
+A docker image which comes with a compatible R, Seurat v4, pytorch and scvi installation can be found [here](https://hub.docker.com/r/lsteuernagel/r_scvi_docker_v2)
+
+The hypoMap model is included in this paper and can be found [here](inst/extdata/models/hypoMap_harmonized_scVI_model/)
+
+The full hypoMap can be downloaded from this [repository](https://www.repository.cam.ac.uk/handle/1810/340518)
+The wrapper function defaults to a smaller object (that can be shipped with the package) for reference_seurat (mapscvi::reference_hypoMap_downsample).
+
+Please see [this folder](inst/python_notebook/) for a simple python example notebook if you don't want to work through R.
 
 ## Example
 

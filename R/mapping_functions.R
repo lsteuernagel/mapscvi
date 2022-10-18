@@ -488,8 +488,8 @@ propagate_labels_prob = function(neighbors_object=NULL,label_vec,query_seurat_ob
 #' Map a query seurat onto the hypomap reference
 #'
 #' Wrapper functions that executes low level functions to prepare, predict and project new data onto a reference based on an scvi model.
-#' Set reference_mode to either 'hypoMap_neurons' or 'hypoMap_full' to project new data onto hypoMap. Use the parameters for model and reference to specify any custom data and still use this wrapper function.
-#' If the model differs strongly from the hypoMap mdoels (covariates used etc) the prepare and mapping functions might break.
+#' Defaults to a smaller object (that can be shipped with the package) for reference_seurat (mapscvi::reference_hypoMap_downsample). Please alternatively download and specify the full object: https://www.repository.cam.ac.uk/handle/1810/341048
+#' If the model differs strongly from the hypoMap model (covariates used etc) the prepare and mapping functions might break.
 #' In that case please manually run the prepare, predict and project functions as shown in the readme.
 #'
 #' @inheritParams prepare_query

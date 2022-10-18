@@ -11,7 +11,6 @@ project_query(
   query_reduction = "scvi",
   assay = "RNA",
   use_projectUMAP = FALSE,
-  n_neighbors = 30,
   annoy.metric = "cosine",
   label_vec = NULL,
   global_seed = 12345
@@ -30,13 +29,13 @@ project_query(
 
 \item{use_projectUMAP}{whether to use Seurat's projectUMAP  or a manual adaption (circumventing possible problems between Seurat and uwot)}
 
-\item{n_neighbors}{n neighbors passed to ProjectUMAP}
-
 \item{annoy.metric}{'cosine' or 'euclidean'}
 
 \item{label_vec}{a vector with labels from reference that will be propagated to query (requires same order as query_reduction!). defaults to NULL (nothing will be propagated). See also 'propagate_labels'}
 
 \item{global_seed}{seed}
+
+\item{n_neighbors}{n neighbors passed to ProjectUMAP}
 }
 \value{
 query_seurat_object: Updated seurat object with projected UMAP, labels and knn graph
