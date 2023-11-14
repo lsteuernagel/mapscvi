@@ -34,7 +34,7 @@ predict_query = function(query_seurat_object,model_path,query_reduction="scvi",v
 
 
   # check if model path is valid:
-  if(!file.exists(paste0(model_path,"model.pt"))){
+  if(!file.exists(paste0(model_path,"/","model.pt"))){
     stop("Error: Please provide a valid model_path to an scvi model at ",model_path)
   }
 
@@ -171,6 +171,7 @@ predict_query = function(query_seurat_object,model_path,query_reduction="scvi",v
 #' @param use_projectUMAP whether to use Seurat's projectUMAP  or a manual adaption (circumventing possible problems between Seurat and uwot)
 #' @param n_neighbors n neighbors passed to ProjectUMAP
 #' @param annoy.metric 'cosine' or 'euclidean'
+#' @param result_type return type: "all","label","entropy" .  For label the maximum is taken to return the likeliest assignment. All returns all results (multiple colummns!), entropy calculates the entropy across probabilities as an uncertainty measure but does not return a label
 #' @param label_vec a vector with labels from reference that will be propagated to query (requires same order as query_reduction!). defaults to NULL (nothing will be propagated). See also 'propagate_labels'
 #' @param global_seed seed
 #'
@@ -181,7 +182,7 @@ predict_query = function(query_seurat_object,model_path,query_reduction="scvi",v
 #' @import Seurat SeuratObject uwot
 
 project_query = function(query_seurat_object,reference_map_reduc,reference_map_umap,query_reduction="scvi",assay="RNA",use_projectUMAP=FALSE,
-                         annoy.metric = "cosine",label_vec =NULL,global_seed=12345){
+                         annoy.metric = "cosine",result_type="label",label_vec =NULL,global_seed=12345){
 
   # TODO: test for umap model (?)
 
@@ -314,7 +315,7 @@ project_query = function(query_seurat_object,reference_map_reduc,reference_map_u
                                                  query_seurat_object = query_seurat_object,
                                                  label_vec = label_vec,
                                                  with_euclidean =FALSE,
-                                                 add_entropy =TRUE,
+                                                 result_type = result_type,
                                                  add_to_seurat =TRUE)
       # additionally run neighbor distances qc
       query_seurat_object = avg_neighbor_distances(query_seurat_object = query_seurat_object,
@@ -341,7 +342,7 @@ project_query = function(query_seurat_object,reference_map_reduc,reference_map_u
 #' @param dist_Nc vector of length k with euclidean distances to neigbors
 #' @param labels_of_neighbor vector of length k with labels of neighbors
 #' @param with_euclidean if input is euclidean: use gussian smoothing and convert to similarity through this. If not assume cosine distance and just invert using: 1 - dist_Nc^2/2
-#' @param result_type return type: "all","label","entropy"
+#' @param result_type return type: "all","label","entropy" .  For label the maximum is taken to return the likeliest assignment. All returns all results (multiple colummns!), entropy calculates the entropy across probabilities as an uncertainty measure but does not return a label
 #'
 #' @return label probability depending on result_type
 #'
@@ -408,14 +409,17 @@ adjusted_cell_probabilities = function(dist_Nc,labels_of_neighbor,with_euclidean
 #' @param annoy.metric euclidean or cosine (not used when neighbors_object is provided)
 #' @param k.param k param for neighbor finding (not used when neighbors_object is provided)
 #' @param with_euclidean Apply gaussian kernel to smooth distances .only use when distance = euclidean ! (or a neighbors_object based on euclidean distances is provided)
+#' @param result_type "all","label" or "entropy". All means all probabilities of cell types in neighborhood. For label the maximum is taken to return the likeliest assignment. All returns all results (multiple colummns!), entropy calculates the entropy across probabilities as an uncertainty measure but does not return a label
 #' @param add_entropy re-run to calculate entropy as uncertainty measure
 #' @param add_to_seurat add to query_seurat_object or return dataframe, requires query_seurat_object to be provided
 #'
 #' @return seuratobject or dataframe with label propagation results and qc
 #'
+#' @importFrom dplyr bind_rows
+#'
 #' @export
 
-propagate_labels_prob = function(neighbors_object=NULL,label_vec,query_seurat_object=NULL,reference_seurat_object=NULL,reduction_name_query="scvi",reduction_name_reference="scvi",annoy.metric="cosine",k.param=30, with_euclidean =FALSE, add_entropy =FALSE, add_to_seurat =FALSE){
+propagate_labels_prob = function(neighbors_object=NULL,label_vec,query_seurat_object=NULL,reference_seurat_object=NULL,reduction_name_query="scvi",reduction_name_reference="scvi",annoy.metric="cosine",k.param=30, with_euclidean =FALSE,result_type = "label", add_entropy =FALSE, add_to_seurat =FALSE){
 
   if(is.null(label_vec)){stop("Error: Please provide a valid (non NULL) label_vec.")}
 
@@ -442,33 +446,36 @@ propagate_labels_prob = function(neighbors_object=NULL,label_vec,query_seurat_ob
   if(with_euclidean & annoy.metric=="cosine"){message("Warning: Applying gaussian filter after using cosine distance.")}
   message("Estimate probabilities")
   n=nrow(neighbors_object@nn.dist)
-  max_probabilities = sapply(1:n,function(x,distances,neighbor_idxs,labels){
+  probabilities = sapply(1:n,function(x,distances,neighbor_idxs,labels){
     dist_Nc = distances[x,]
     label_of_neighbor = labels[neighbor_idxs[x,]]
-    prob = adjusted_cell_probabilities(dist_Nc = dist_Nc,labels_of_neighbor = label_of_neighbor,with_euclidean = with_euclidean,result_type = "label")
+    prob = adjusted_cell_probabilities(dist_Nc = dist_Nc,labels_of_neighbor = label_of_neighbor,with_euclidean = with_euclidean,result_type = result_type)
     prob
   },distances = neighbors_object@nn.dist,neighbor_idxs = neighbors_object@nn.idx,labels = label_vec)
 
   # mapping results
-  mapping_results = data.frame(Cell_ID = neighbors_object@cell.names[1:n],
-                               predicted = names(max_probabilities),
-                               prediction_probability = as.numeric(max_probabilities))
-
-  # not super efficient because I apply the function twice ....
-  if(add_entropy){
-    message("Estimate entropy")
-    # apply max prob per cell function
-    mapping_results$prediction_entropy = sapply(1:n,function(x,distances,neighbor_idxs,labels){
-      dist_Nc = distances[x,]
-      label_of_neighbor = labels[neighbor_idxs[x,]]
-      prob = adjusted_cell_probabilities(dist_Nc = dist_Nc,labels_of_neighbor = label_of_neighbor,result_type = "entropy")
-      prob
-    },distances = neighbors_object@nn.dist,neighbor_idxs = neighbors_object@nn.idx,labels = label_vec)
+  mapping_results = data.frame(Cell_ID = neighbors_object@cell.names[1:n])
+  # rename
+  if(result_type == "label"){
+    mapping_results = as.data.frame(cbind(mapping_results,as.numeric(probabilities)))
+    colnames(mapping_results)[ncol(mapping_results)] = "prediction_probability"
+    mapping_results$predicted = names(probabilities)
+  }
+  if(result_type == "entropy"){
+    mapping_results = as.data.frame(cbind(mapping_results,as.numeric(probabilities)))
+    colnames(mapping_results)[ncol(mapping_results)] = "prediction_entropy"
+  }
+  if(result_type == "all"){
+    probabilities_df <- data.frame(do.call(bind_rows, probabilities))
+    probabilities_df[is.na(probabilities_df)] = 0
+    mapping_results = as.data.frame(cbind(mapping_results,probabilities_df))
+    colnames(mapping_results)[2:ncol(mapping_results)] = paste0("prediction_",colnames(probabilities_df))
   }
   # return
   if(add_to_seurat & !is.null(query_seurat_object)){
     # remove if existing for clean join
     keep_names = colnames(query_seurat_object@meta.data)[!colnames(query_seurat_object@meta.data) %in% c("predicted","prediction_probability","prediction_entropy")]
+    keep_names = keep_names[ ! grepl("prediction_",keep_names)]
     query_seurat_object@meta.data = query_seurat_object@meta.data[,keep_names]
     # join
     query_seurat_object@meta.data = dplyr::left_join(query_seurat_object@meta.data, mapping_results, by = c("Cell_ID"="Cell_ID"))
@@ -517,7 +524,7 @@ map_new_seurat_hypoMap = function(query_seurat_object,suffix="query",assay="RNA"
   query_seurat_object = prepare_query(query_seurat_object,suffix=suffix,assay=assay,subset_col=subset_col,subset_values=subset_values,normalize=TRUE,batch_var = "Batch_ID",global_seed=global_seed)
 
   # check if model path is valid:
-  if(!file.exists(paste0(model_path,"model.pt"))){
+  if(!file.exists(paste0(model_path,"/","model.pt"))){
     stop("Error: Please provide a valid model_path to an scvi model at ",model_path)
   }
   # predict with scvi

@@ -131,8 +131,8 @@ the labels.
 
 ``` r
 plot_query_labels(query_seura_object=query_romanov,reference_seurat=mapscvi::reference_hypoMap_downsample,label_col="C66_named",overlay = TRUE,query_pt_size = 0.4,labelonplot = FALSE,label.size=1)
-#> Scale for 'colour' is already present. Adding another scale for 'colour',
-#> which will replace the existing scale.
+#> Scale for colour is already present.
+#> Adding another scale for colour, which will replace the existing scale.
 ```
 
 <img src="man/figures/README-unnamed-chunk-9-1.png" width="100%" />
@@ -142,7 +142,7 @@ similarity to the the neighbors in there reference which an indicate how
 well different cells mapped to their assigned celltypes.
 
 ``` r
-Seurat::FeaturePlot(query_romanov,features = "prediction_probability")+Seurat::NoAxes()
+FeaturePlot(query_romanov,features = "prediction_probability")+NoAxes()
 ```
 
 <img src="man/figures/README-unnamed-chunk-10-1.png" width="100%" />
@@ -239,8 +239,8 @@ Or with overlay:
 
 ``` r
 plot_query_labels(query_seura_object=lamanno_seurat_object,reference_seurat=mapscvi::reference_hypoMap_downsample,label_col="C66_named",overlay = TRUE,query_pt_size = 0.4,labelonplot = FALSE,label.size=1)
-#> Scale for 'colour' is already present. Adding another scale for 'colour',
-#> which will replace the existing scale.
+#> Scale for colour is already present.
+#> Adding another scale for colour, which will replace the existing scale.
 ```
 
 <img src="man/figures/README-unnamed-chunk-18-1.png" width="100%" />
@@ -278,7 +278,7 @@ The prediction_probability is mostly helpful in determining whether a
 celltype was unambiguously mapped.
 
 ``` r
-Seurat::FeaturePlot(lamanno_seurat_object,features = "prediction_probability")+Seurat::NoAxes()
+FeaturePlot(lamanno_seurat_object,features = "prediction_probability")+NoAxes()
 ```
 
 <img src="man/figures/README-unnamed-chunk-20-1.png" width="100%" />

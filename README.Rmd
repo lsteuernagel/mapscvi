@@ -108,7 +108,7 @@ plot_query_labels(query_seura_object=query_romanov,reference_seurat=mapscvi::ref
 The mapping also returns a prediction probability based on the similarity to the the neighbors in there reference which an indicate how well different cells mapped to their assigned celltypes.
 
 ```{r}
-Seurat::FeaturePlot(query_romanov,features = "prediction_probability")+Seurat::NoAxes()
+FeaturePlot(query_romanov,features = "prediction_probability")+NoAxes()
 ```
 
 
@@ -193,7 +193,7 @@ We can use various quality metrics to see how the projection of the new data wor
 The prediction_probability is mostly helpful in determining whether a celltype was unambiguously mapped. 
 
 ```{r}
-Seurat::FeaturePlot(lamanno_seurat_object,features = "prediction_probability")+Seurat::NoAxes()
+FeaturePlot(lamanno_seurat_object,features = "prediction_probability")+NoAxes()
 ```
 
 ## Conclusion
