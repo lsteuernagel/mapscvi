@@ -18,6 +18,7 @@
 #' @param max_epochs epochs to train
 #' @param assay assay name for new prediction and where to find raw counts. defaults to RNA
 #' @param use_reticulate if TRUE: tries to call scvi via reticulate, if FALSE: exports an anndata object to a temp file and then calls a python script to run prediction code using system()
+#' @param pythonEnv path to a python binary, passed to reticulate::use_python
 #' @param global_seed seed
 #'
 #' @return query_seurat_object: Updated seurat object with predicted latent space as reduction.
@@ -30,7 +31,7 @@
 
 # TODO: need to limit cores used by scvi ! (run setup !)
 
-predict_query = function(query_seurat_object,model_path,query_reduction="scvi",var_names=NULL,max_epochs = 30,assay="RNA",use_reticulate = FALSE,global_seed=12345){
+predict_query = function(query_seurat_object,model_path,query_reduction="scvi",var_names=NULL,max_epochs = 30,assay="RNA",pythonEnv = NULL,use_reticulate = FALSE,global_seed=12345){
 
 
   # check if model path is valid:
@@ -53,6 +54,9 @@ predict_query = function(query_seurat_object,model_path,query_reduction="scvi",v
     message("Matrix for anndata dim ",dim(matrix_for_anndata)[1]," ",dim(matrix_for_anndata)[2])
   }else{
     matrix_for_anndata = as.matrix(SeuratObject::GetAssayData(query_seurat_object,slot='counts',assay=assay))
+    # NEW CHANGE: make var_df object neccessary for sc$AnnData setup
+    var_df = data.frame(var_names = rownames(matrix_for_anndata))
+    rownames(var_df) = var_df$var_names
     message("Matrix for anndata dim ",dim(matrix_for_anndata)[1]," ",dim(matrix_for_anndata)[2])
   }
 
@@ -62,6 +66,11 @@ predict_query = function(query_seurat_object,model_path,query_reduction="scvi",v
     if (!requireNamespace("reticulate", quietly = TRUE)) {
       warning("The reticulate package must be installed to use this function when use_reticulate is set to TRUE.")
       return(NULL)
+    }
+
+    # specifiy pythonEnv
+    if (!is.null(pythonEnv)){
+      reticulate::use_python(pythonEnv)
     }
 
     # TODO: add checks for python modules like this:
@@ -519,7 +528,7 @@ map_new_seurat_hypoMap = function(query_seurat_object,suffix="query",assay="RNA"
                                   label_col="",subset_values=NULL,max_epochs,
                                   model_path = system.file("extdata/models/hypoMap_harmonized_scVI_model/", package = 'mapscvi'),
                                   reference_seurat=mapscvi::reference_hypoMap_downsample,reference_reduction="scvi",inferred_sex_varname = "inferred_sex" ,
-                                  use_reticulate = FALSE,global_seed=12345){
+                                  pythonEnv = NULL, use_reticulate = FALSE,global_seed=12345){
 
   # prepare
   query_seurat_object = prepare_query(query_seurat_object,suffix=suffix,assay=assay,subset_col=subset_col,subset_values=subset_values,normalize=TRUE,batch_var = "Batch_ID",global_seed=global_seed)
@@ -529,8 +538,13 @@ map_new_seurat_hypoMap = function(query_seurat_object,suffix="query",assay="RNA"
     stop("Error: Please provide a valid model_path to an scvi model at ",model_path)
   }
   # predict with scvi
-  query_seurat_object = predict_query(query_seurat_object,model_path,max_epochs = max_epochs,assay="RNA",global_seed=global_seed)
-
+  query_seurat_object = predict_query(query_seurat_object,
+                                      model_path,
+                                      max_epochs = max_epochs,
+                                      assay="RNA",
+                                      use_reticulate = use_reticulate,
+                                      pythonEnv = pythonEnv,
+                                      global_seed=global_seed)
   # check
   if(is.null(reference_seurat)){
     stop("Error: Please provide reference seurat with latent space, umap and metadata")

@@ -3,12 +3,12 @@ print("start python ....")
 
 # Import relevant modules
 import sys
-import pandas as pd
 import numpy as np
 import scanpy as sc
 import anndata
 import torch
 import scvi
+import pandas as pd
 from os import listdir
 from os.path import isfile, join
 print(scvi.__version__)
