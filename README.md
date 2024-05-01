@@ -26,6 +26,13 @@ A docker image which comes with a compatible R, Seurat v4, pytorch and
 scvi installation can be found
 [here](https://hub.docker.com/r/lsteuernagel/r_scvi_docker_v2)
 
+If you use your own environment, be aware of some recent [dependency
+issues with scvi and
+jax](https://github.com/scverse/scvi-tools/issues/2501). These can cause
+scvi to fail leading to the error: “File
+‘/tmp/xxxxxx/predicted_data.txt’ does not exist or is non-readable”
+caused by R not being able to load the missing scvi export.
+
 The hypoMap model is included in this paper and can be found
 [here](inst/extdata/models/hypoMap_harmonized_scVI_model/)
 

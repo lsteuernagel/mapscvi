@@ -14,6 +14,7 @@ propagate_labels_prob(
   annoy.metric = "cosine",
   k.param = 30,
   with_euclidean = FALSE,
+  result_type = "label",
   add_entropy = FALSE,
   add_to_seurat = FALSE
 )
@@ -36,6 +37,8 @@ propagate_labels_prob(
 \item{k.param}{k param for neighbor finding (not used when neighbors_object is provided)}
 
 \item{with_euclidean}{Apply gaussian kernel to smooth distances .only use when distance = euclidean ! (or a neighbors_object based on euclidean distances is provided)}
+
+\item{result_type}{"all","label" or "entropy". All means all probabilities of cell types in neighborhood. For label the maximum is taken to return the likeliest assignment. All returns all results (multiple colummns!), entropy calculates the entropy across probabilities as an uncertainty measure but does not return a label}
 
 \item{add_entropy}{re-run to calculate entropy as uncertainty measure}
 

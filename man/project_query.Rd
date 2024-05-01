@@ -12,6 +12,7 @@ project_query(
   assay = "RNA",
   use_projectUMAP = FALSE,
   annoy.metric = "cosine",
+  result_type = "label",
   label_vec = NULL,
   global_seed = 12345
 )
@@ -30,6 +31,8 @@ project_query(
 \item{use_projectUMAP}{whether to use Seurat's projectUMAP  or a manual adaption (circumventing possible problems between Seurat and uwot)}
 
 \item{annoy.metric}{'cosine' or 'euclidean'}
+
+\item{result_type}{return type: "all","label","entropy" .  For label the maximum is taken to return the likeliest assignment. All returns all results (multiple colummns!), entropy calculates the entropy across probabilities as an uncertainty measure but does not return a label}
 
 \item{label_vec}{a vector with labels from reference that will be propagated to query (requires same order as query_reduction!). defaults to NULL (nothing will be propagated). See also 'propagate_labels'}
 

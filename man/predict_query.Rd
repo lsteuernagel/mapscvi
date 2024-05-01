@@ -11,6 +11,7 @@ predict_query(
   var_names = NULL,
   max_epochs = 30,
   assay = "RNA",
+  pythonEnv = NULL,
   use_reticulate = FALSE,
   global_seed = 12345
 )
@@ -27,6 +28,8 @@ predict_query(
 \item{max_epochs}{epochs to train}
 
 \item{assay}{assay name for new prediction and where to find raw counts. defaults to RNA}
+
+\item{pythonEnv}{path to a python binary, passed to reticulate::use_python}
 
 \item{use_reticulate}{if TRUE: tries to call scvi via reticulate, if FALSE: exports an anndata object to a temp file and then calls a python script to run prediction code using system()}
 

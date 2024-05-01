@@ -18,7 +18,7 @@ adjusted_cell_probabilities(
 
 \item{with_euclidean}{if input is euclidean: use gussian smoothing and convert to similarity through this. If not assume cosine distance and just invert using: 1 - dist_Nc^2/2}
 
-\item{result_type}{return type: "all","label","entropy"}
+\item{result_type}{return type: "all","label","entropy" .  For label the maximum is taken to return the likeliest assignment. All returns all results (multiple colummns!), entropy calculates the entropy across probabilities as an uncertainty measure but does not return a label}
 }
 \value{
 label probability depending on result_type
