@@ -111,9 +111,10 @@ predict_query = function(query_seurat_object,model_path,query_reduction="scvi",v
     temp_dir = paste0(tempdir(),"/")
 
     # make Seurat from updated matrix
-    temp_seurat = SeuratObject::CreateSeuratObject(counts = matrix_for_anndata, meta.data = query_seurat_object@meta.data, project = query_seurat_object@project.name)
+    temp_seurat = SeuratObject::CreateSeuratObject(counts = matrix_for_anndata, assay = assay, meta.data = query_seurat_object@meta.data, project = query_seurat_object@project.name)
     # export anndata
     h5Seurat_filename=paste0(temp_dir,"temp_",temp_seurat@project.name,".h5Seurat")
+    temp_seurat[[assay]] <- as(object = temp_seurat[[assay]], Class = "Assay") # change assay from assay5 to fix 'Error in guess_dtype(x = x, ...) : unknown type'
     SeuratDisk::SaveH5Seurat(object = temp_seurat,filename = h5Seurat_filename,overwrite = TRUE)
     updated_name = gsub(".h5Seurat",paste0("_",assay,".h5ad"),h5Seurat_filename)
     SeuratDisk::Convert(h5Seurat_filename, dest = updated_name,assay=assay,verbose=FALSE,overwrite=TRUE)
